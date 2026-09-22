@@ -1,9 +1,4 @@
-"""
-Mentee app — same UI as mentor preview when `src/` is complete (Sessions 1–7).
-
-Run: PYTHONPATH=. streamlit run app/streamlit_app.py
-Progress: python scripts/check_session.py
-"""
+"""Mentee StrainScope — unlocks when Session 7 `src/` is complete."""
 
 from __future__ import annotations
 
@@ -16,37 +11,34 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from app.ui_theme import hero, inject_theme
 from app.progress import ready_for_dashboard, session_status
+from app.ui_theme import hero, inject_theme
 
-st.set_page_config(page_title="Fatigue Insight", page_icon="💤", layout="wide")
+st.set_page_config(page_title="StrainScope", page_icon="⌚", layout="wide")
 
 if not ready_for_dashboard():
     inject_theme()
-    hero("Stress & Fatigue Insight", "Build week by week — your app matches the mentor preview when Session 7 is done.")
-    st.markdown("### Your progress")
+    hero("StrainScope", "Build week by week → same app as the mentor preview.")
+    st.markdown("### Progress")
     for line in session_status():
         st.markdown(line)
-    st.markdown(
-        """
-Follow **[docs/BUILD_PATH.md](../docs/BUILD_PATH.md)** and the notebook for each session.
-
-When all Session 7 checks pass, restart this app to load the full dashboard.
-"""
-    )
+    st.info("Follow [docs/BUILD_PATH.md](docs/BUILD_PATH.md). Mentor preview: `app/mentor_preview.py`")
     st.stop()
 
 from app.dashboard import run_dashboard
-from src.data_loader import load_feature_table
+from src.counterfactuals import suggest_what_ifs
+from src.data_loader import load_feature_table, load_person_baselines
 from src.explain import explain_prediction
-from src.models import FEATURE_COLUMNS, predict_fatigue, save_model, train_model
+from src.models import FEATURE_COLUMNS, predict_strain, save_model, train_model
 
 run_dashboard(
     load_feature_table=load_feature_table,
+    load_person_baselines=load_person_baselines,
     feature_columns=FEATURE_COLUMNS,
     train_model=train_model,
     save_model=save_model,
-    predict_fatigue=predict_fatigue,
+    predict_strain=predict_strain,
     explain_prediction=explain_prediction,
-    subtitle="Built by your team — same experience as the GDSC demo.",
+    suggest_what_ifs=suggest_what_ifs,
+    subtitle="Built by your team — watch signals, personal baseline, what-if scenarios.",
 )

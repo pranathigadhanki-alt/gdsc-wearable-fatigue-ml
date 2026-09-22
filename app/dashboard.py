@@ -1,4 +1,4 @@
-"""Shared Streamlit UI — mentees use via `streamlit_app.py`, mentors via `mentor_preview.py`."""
+"""StrainScope dashboard — watch signals, personal baseline, what-if."""
 
 from __future__ import annotations
 
@@ -8,234 +8,184 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from app.input_helpers import (
-    COMPARE_LABELS,
-    UI_DEFAULT_KEYS,
-    ui_to_explain_row,
-    ui_to_model_row,
-)
-from app.ui_theme import hero, inject_theme, reason_card
+from app.input_helpers import COMPARE_LABELS, ui_to_model_row
+from app.ui_theme import baseline_pills, hero, inject_theme, reason_card
+from src.kaggle_schema import WATCH_SIGNALS
 
 PRESETS = {
-    "Custom (sliders)": None,
-    "📚 Crunch week": {
-        "sleep_duration": 5.8,
-        "quality_of_sleep": 4,
-        "stress_level": 8,
-        "physical_activity_level": 25,
-        "heart_rate": 82,
-        "daily_steps": 3500,
-        "age": 22,
-    },
-    "😴 Recovery day": {
-        "sleep_duration": 8.0,
-        "quality_of_sleep": 9,
-        "stress_level": 3,
-        "physical_activity_level": 55,
-        "heart_rate": 64,
-        "daily_steps": 9000,
-        "age": 22,
-    },
-    "🏃 Active, short sleep": {
-        "sleep_duration": 6.0,
-        "quality_of_sleep": 6,
-        "stress_level": 7,
-        "physical_activity_level": 85,
-        "heart_rate": 78,
-        "daily_steps": 12000,
-        "age": 28,
-    },
+    "Typical day (your baseline)": "baseline",
+    "🔥 Short sleep + high HR": "bad",
+    "💚 Recovery day": "good",
 }
-
-
-def _default_ui(df: pd.DataFrame, feature_columns: list[str]) -> dict:
-    med = df[feature_columns].median()
-    ui = {
-        "sleep_duration": float(med["sleep_duration"]),
-        "quality_of_sleep": int(med["quality_of_sleep"]),
-        "heart_rate": int(med["heart_rate"]),
-        "physical_activity_level": int(med["physical_activity_level"]),
-        "daily_steps": int(med["daily_steps"]),
-        "age": int(med["age"]),
-    }
-    if "stress_level" in df.columns:
-        ui["stress_level"] = int(df["stress_level"].median())
-    else:
-        ui["stress_level"] = 5
-    return ui
 
 
 def run_dashboard(
     *,
     load_feature_table: Callable,
+    load_person_baselines: Callable,
     feature_columns: list[str],
     train_model: Callable,
     save_model: Callable,
-    predict_fatigue: Callable,
+    predict_strain: Callable,
     explain_prediction: Callable,
-    subtitle: str = "See how sleep, stress, and heart rate combine — with a plain-language explanation.",
+    suggest_what_ifs: Callable,
+    subtitle: str,
 ) -> None:
-    st.set_page_config(
-        page_title="Fatigue Insight",
-        page_icon="💤",
-        layout="wide",
-        initial_sidebar_state="expanded",
-    )
+    st.set_page_config(page_title="StrainScope", page_icon="⌚", layout="wide", initial_sidebar_state="expanded")
     inject_theme()
 
     @st.cache_resource
-    def get_model_and_data():
+    def get_assets():
         df = load_feature_table(use_demo=True)
+        baselines = load_person_baselines(use_demo=True)
         pipe = train_model(use_demo=True)
         save_model(pipe)
-        return pipe, df
+        return df, baselines, pipe
 
-    pipe, df = get_model_and_data()
-    defaults_ui = _default_ui(df, feature_columns)
-    medians_ui = dict(defaults_ui)
+    df, baselines, pipe = get_assets()
+    people = baselines["participant_id"].tolist()
 
     with st.sidebar:
-        st.markdown("### 🎛️ Quick scenarios")
-        preset_name = st.selectbox("Load a profile", list(PRESETS.keys()))
+        st.markdown("### ⌚ Choose a profile")
+        pid = st.selectbox("Person (for *your* baseline)", people, format_func=lambda x: f"Person {x}")
+        preset = st.selectbox("Quick today scenario", list(PRESETS.keys()))
         st.markdown("---")
-        st.caption("Educational demo — not medical advice.")
-        st.metric("Rows in table", len(df))
-        st.metric("High fatigue %", f"{df['fatigue_high'].mean():.0%}")
+        st.caption("We never ask «how stressed are you?» — only watch-like signals.")
+        st.metric("Training nights", len(df))
+        st.metric("High strain nights", f"{df['strain_high'].mean():.0%}")
 
-    hero("Stress & Fatigue Insight", subtitle)
+    b = baselines[baselines["participant_id"] == pid].iloc[0]
 
-    if "ui" not in st.session_state:
-        st.session_state.ui = defaults_ui
+    hero(
+        "StrainScope",
+        subtitle,
+    )
 
-    if PRESETS[preset_name] is not None:
-        st.session_state.ui = dict(PRESETS[preset_name])
-        st.session_state.pop("last_proba", None)
+    if "today" not in st.session_state:
+        st.session_state.today = {k: float(b[k]) for k in WATCH_SIGNALS}
+        st.session_state.pid = pid
 
-    tab_input, tab_why, tab_data = st.tabs(["✨ Your day", "💬 Why this score?", "📊 Cohort data"])
+    if st.session_state.pid != pid:
+        st.session_state.pid = pid
+        st.session_state.today = {k: float(b[k]) for k in WATCH_SIGNALS}
 
-    with tab_input:
-        left, mid, right = st.columns([1.1, 1, 1])
-        ui = st.session_state.ui
+    if PRESETS[preset] == "baseline":
+        st.session_state.today = {k: float(b[k]) for k in WATCH_SIGNALS}
+    elif PRESETS[preset] == "bad":
+        st.session_state.today = {
+            "sleep_duration": max(5.0, float(b["sleep_duration"]) - 1.5),
+            "heart_rate": min(95, float(b["heart_rate"]) + 12),
+            "daily_steps": max(1500, float(b["daily_steps"]) - 3500),
+            "physical_activity_level": max(10, float(b["physical_activity_level"]) - 20),
+        }
+    elif PRESETS[preset] == "good":
+        st.session_state.today = {
+            "sleep_duration": min(9.0, float(b["sleep_duration"]) + 1.2),
+            "heart_rate": max(55, float(b["heart_rate"]) - 8),
+            "daily_steps": min(14000, float(b["daily_steps"]) + 2500),
+            "physical_activity_level": min(90, float(b["physical_activity_level"]) + 15),
+        }
 
-        with left:
-            st.markdown("#### Sleep & stress")
-            ui["sleep_duration"] = st.slider(
-                "🌙 Sleep last night (hours)",
-                5.0,
-                9.0,
-                float(ui.get("sleep_duration", medians_ui["sleep_duration"])),
-                0.1,
-                help="How long you slept — from your watch or best guess.",
+    tab_today, tab_why, tab_whatif, tab_data = st.tabs(
+        ["📡 Today’s signals", "💬 Why?", "✨ What moves the needle?", "📊 Data"]
+    )
+
+    today = st.session_state.today
+
+    with tab_today:
+        st.markdown("#### Your normal (baseline)")
+        baseline_pills(float(b["sleep_duration"]), float(b["heart_rate"]), float(b["daily_steps"]))
+
+        c1, c2, c3 = st.columns([1, 1, 1.1])
+        with c1:
+            today["sleep_duration"] = st.slider(
+                "🌙 Sleep (hours)", 5.0, 9.0, float(today["sleep_duration"]), 0.1
             )
-            ui["quality_of_sleep"] = st.slider(
-                "✨ How rested do you feel? (1–10)",
-                1,
-                10,
-                int(ui.get("quality_of_sleep", medians_ui["quality_of_sleep"])),
-                help="1 = exhausted, 10 = fully refreshed.",
+            today["heart_rate"] = st.slider(
+                "❤️ Resting HR (bpm)", 55, 95, int(today["heart_rate"])
             )
-            ui["stress_level"] = st.slider(
-                "⚡ Stress right now (1–10)",
-                1,
-                10,
-                int(ui.get("stress_level", medians_ui["stress_level"])),
-                help="1 = calm, 10 = very stressed. No math — we combine this with sleep for the model.",
+        with c2:
+            today["daily_steps"] = st.slider(
+                "🚶 Steps", 1000, 15000, int(today["daily_steps"]), 500
             )
+            today["physical_activity_level"] = st.slider(
+                "🏃 Active minutes", 10, 90, int(today["physical_activity_level"])
+            )
+        st.session_state.today = today
 
-        with mid:
-            st.markdown("#### Body & activity")
-            ui["heart_rate"] = st.slider(
-                "❤️ Resting heart rate (bpm)",
-                55,
-                95,
-                int(ui.get("heart_rate", medians_ui["heart_rate"])),
-            )
-            ui["physical_activity_level"] = st.slider(
-                "🏃 Active minutes yesterday",
-                0,
-                100,
-                int(ui.get("physical_activity_level", medians_ui["physical_activity_level"])),
-            )
-            ui["daily_steps"] = st.slider(
-                "🚶 Steps yesterday",
-                1000,
-                15000,
-                int(ui.get("daily_steps", medians_ui["daily_steps"])),
-                500,
-            )
-            ui["age"] = st.slider("🎂 Age", 18, 70, int(ui.get("age", medians_ui["age"])))
-            st.session_state.ui = ui
-            run = st.button("🔮 Update prediction", type="primary", use_container_width=True)
+        model_row = ui_to_model_row(pid, today, baselines)
+        run = st.button("🔮 Estimate next-day strain", type="primary", use_container_width=True)
 
-        with right:
-            model_row = ui_to_model_row(ui)
-            explain_row = ui_to_explain_row(ui, model_row)
-
-            if run or "last_proba" not in st.session_state:
-                label, proba = predict_fatigue(model_row, pipe)
-                reasons, summary = explain_prediction(explain_row, df, pipe, label, proba)
-                st.session_state.update(
-                    last_proba=proba,
-                    last_label=label,
-                    last_summary=summary,
-                    last_reasons=reasons,
+        with c3:
+            if run or "proba" not in st.session_state:
+                label, proba = predict_strain(model_row, pipe)
+                reasons, summary = explain_prediction(
+                    model_row, baselines, pid, pipe, label, proba
                 )
+                whatifs = suggest_what_ifs(pid, today, baselines, pipe, proba)
+                st.session_state.update(proba=proba, label=label, summary=summary, reasons=reasons, whatifs=whatifs)
 
-            proba = st.session_state.get("last_proba", 0.0)
-            label = st.session_state.get("last_label", 0)
+            proba = st.session_state.get("proba", 0.0)
+            label = st.session_state.get("label", 0)
 
             fig = go.Figure(
                 go.Indicator(
-                    mode="gauge+number",
+                    mode="gauge+number+delta",
                     value=proba * 100,
-                    number={"suffix": "%", "font": {"size": 40, "color": "#f8fafc"}},
-                    title={"text": "Fatigue risk", "font": {"color": "#e2e8f0"}},
+                    number={"suffix": "%", "font": {"size": 44, "color": "#f8fafc"}},
+                    title={"text": "Next-day strain", "font": {"color": "#e2e8f0", "size": 16}},
+                    delta={"reference": 50, "suffix": "%"},
                     gauge={
-                        "axis": {"range": [0, 100], "tickcolor": "#94a3b8"},
-                        "bar": {"color": "#a855f7" if label else "#14b8a6"},
+                        "axis": {"range": [0, 100]},
+                        "bar": {"color": "#c084fc" if label else "#2dd4bf"},
                         "steps": [
-                            {"range": [0, 40], "color": "rgba(34,197,94,0.35)"},
-                            {"range": [40, 70], "color": "rgba(234,179,8,0.35)"},
-                            {"range": [70, 100], "color": "rgba(249,115,22,0.45)"},
+                            {"range": [0, 35], "color": "rgba(45,212,191,0.4)"},
+                            {"range": [35, 65], "color": "rgba(250,204,21,0.35)"},
+                            {"range": [65, 100], "color": "rgba(251,146,60,0.5)"},
                         ],
-                        "threshold": {"line": {"color": "#f1f5f9", "width": 2}, "value": 50},
                     },
                 )
             )
             fig.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
-                height=260,
-                margin=dict(t=40, b=0, l=20, r=20),
+                height=280,
+                margin=dict(t=50, b=10, l=25, r=25),
             )
             st.plotly_chart(fig, use_container_width=True)
-
-            if label == 1:
-                st.error("**Elevated fatigue** — prioritize sleep and downshift intensity today.")
+            if label:
+                st.error("Patterns look like a **higher-strain** day for this person.")
             else:
-                st.success("**Lower fatigue signal** — patterns look closer to recovery for this cohort.")
+                st.success("Closer to **their** normal — lower predicted strain.")
 
     with tab_why:
-        st.markdown("#### Summary")
-        st.markdown(st.session_state.get("last_summary", "Click **Update prediction** on the first tab."))
-        st.markdown("#### Why we think that")
-        for r in st.session_state.get("last_reasons", []):
+        st.markdown(st.session_state.get("summary", "Run estimate on the first tab."))
+        for r in st.session_state.get("reasons", []):
             reason_card(r.icon, r.title, r.detail, r.tone)
 
-        st.markdown("#### You vs typical in our dataset")
-        ui = st.session_state.ui
-        cohort = medians_ui
-        compare = pd.DataFrame(
+        st.markdown("#### Today vs your baseline")
+        comp = pd.DataFrame(
             {
-                "You": [ui[k] for k in COMPARE_LABELS],
-                "Typical": [cohort[k] for k in COMPARE_LABELS],
+                "Today": [today[k] for k in WATCH_SIGNALS],
+                "Your baseline": [float(b[k]) for k in WATCH_SIGNALS],
             },
-            index=list(COMPARE_LABELS.values()),
+            index=[COMPARE_LABELS[k] for k in WATCH_SIGNALS],
         )
-        st.bar_chart(compare, color=["#a855f7", "#64748b"], stack=False)
+        st.bar_chart(comp, color=["#a78bfa", "#64748b"], stack=False)
+
+    with tab_whatif:
+        st.markdown(
+            "Small changes in **sleep**, **steps**, or **heart rate** — "
+            "we re-run the same model and show how strain risk shifts."
+        )
+        for w in st.session_state.get("whatifs", []):
+            sign = "↓" if w.delta_pp < 0 else "↑"
+            st.markdown(
+                f'<div class="whatif"><strong>{w.title}</strong> — {w.detail}<br>'
+                f'Strain risk: <strong>{w.proba:.0%}</strong> '
+                f'<span style="color:{"#4ade80" if w.delta_pp < 0 else "#fb923c"};">'
+                f'({sign} {abs(w.delta_pp):.0f} pp vs today)</span></div>',
+                unsafe_allow_html=True,
+            )
 
     with tab_data:
-        show_cols = feature_columns + ["fatigue_high"]
-        if "stress_level" in df.columns:
-            show_cols = ["stress_level"] + show_cols
-        st.dataframe(df[show_cols].head(25), use_container_width=True, height=400)
+        st.dataframe(df.head(30), use_container_width=True, height=420)

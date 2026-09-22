@@ -1,30 +1,25 @@
-# GDSC showcase guide (Session 8)
+# Showcase — StrainScope (Session 8)
 
-## Format
+## 10-minute flow
 
-- ~**10 minutes** + live Streamlit + short Q&A
-- Five members: split slides; one person drives the demo
-
-## Google Slides outline
-
-1. Problem — fatigue signals in wearables
-2. Data — PMData (+ WESAD if used)
-3. Label — rule from team charter
-4. Features — top columns table
-5. Models — baseline → logistic/RF → tuned
-6. Metrics — confusion matrix + why recall or F1
-7. Demo — Streamlit screenshot + live run
-8. Limitations — not medical advice; lab vs daily life
-9. Next steps — personalization, more participants
+1. **Hook (30s)** — “Your watch already knows something’s off before you admit you’re drained.”
+2. **Problem** — Survey fatigue; we use passive signals + **your** baseline.
+3. **Live demo** — Pick Person 12 → “Short sleep + high HR” preset → gauge → **What moves the needle?** (+1h sleep).
+4. **ML moment** — One slide: rules vs RF on held-out people (precision/recall).
+5. **Tech** — sklearn, group splits, Kaggle dataset citation.
+6. **Limits** — Not medical; labels from self-report in training; demo CSV ≠ your real watch.
 
 ## Demo script
 
 ```bash
-streamlit run app/streamlit_app.py
+PYTHONPATH=. streamlit run app/streamlit_app.py
 ```
 
-Walk through sliders → probability → plain-language message.
+1. Sidebar: choose person  
+2. Tab 1: bad-day preset → Estimate  
+3. Tab 2: read “Compared to you”  
+4. Tab 3: read top what-if (green ↓ pp)
 
 ## Ethics (read aloud)
 
-“This is a club learning project, not a medical device.”
+“This is a student learning project, not a medical device or diagnosis tool.”

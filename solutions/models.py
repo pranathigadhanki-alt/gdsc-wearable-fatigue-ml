@@ -1,4 +1,4 @@
-"""Mentor reference — sklearn pipelines."""
+"""Predict strain from watch signals + personal baseline deltas only."""
 
 from __future__ import annotations
 
@@ -15,16 +15,18 @@ from sklearn.preprocessing import StandardScaler
 from solutions.data_loader import load_feature_table, participant_groups
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-MODEL_PATH = REPO_ROOT / "models" / "fatigue_classifier.joblib"
+MODEL_PATH = REPO_ROOT / "models" / "strain_classifier.joblib"
 
+# No stress / sleep-quality sliders at inference
 FEATURE_COLUMNS = [
     "sleep_duration",
-    "quality_of_sleep",
-    "physical_activity_level",
     "heart_rate",
     "daily_steps",
-    "age",
-    "stress_x_poor_sleep",
+    "physical_activity_level",
+    "sleep_duration_delta",
+    "heart_rate_delta",
+    "daily_steps_delta",
+    "physical_activity_level_delta",
 ]
 
 
@@ -42,9 +44,7 @@ def build_rf_pipeline() -> Pipeline:
         [
             (
                 "clf",
-                RandomForestClassifier(
-                    n_estimators=200, class_weight="balanced", random_state=42
-                ),
+                RandomForestClassifier(n_estimators=300, class_weight="balanced", random_state=42),
             ),
         ]
     )
@@ -53,7 +53,7 @@ def build_rf_pipeline() -> Pipeline:
 def train_model(use_demo: bool = True) -> Pipeline:
     df = load_feature_table(use_demo=use_demo)
     X = df[FEATURE_COLUMNS]
-    y = df["fatigue_high"]
+    y = df["strain_high"]
     groups = participant_groups(df)
     split = GroupShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
     train_idx, _ = next(split.split(X, y, groups=groups))
@@ -77,10 +77,14 @@ def load_model(path: Path | None = None) -> Pipeline:
     return joblib.load(path)
 
 
-def predict_fatigue(row: pd.Series | dict, pipe: Pipeline | None = None) -> tuple[int, float]:
+def predict_strain(row: pd.Series | dict, pipe: Pipeline | None = None) -> tuple[int, float]:
     pipe = pipe or load_model()
     if isinstance(row, dict):
         row = pd.Series(row)
     X = row[FEATURE_COLUMNS].to_frame().T
     proba = float(pipe.predict_proba(X)[0, 1])
     return int(proba >= 0.5), proba
+
+
+# Back-compat alias for older notebook text
+predict_fatigue = predict_strain

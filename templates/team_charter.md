@@ -1,42 +1,26 @@
-# Team charter (complete in Session 1 — merge before end of meeting)
+# Team charter — StrainScope (Session 1)
 
-## Team members & roles
+## One-line pitch
 
-| Name | Role |
-|------|------|
-| | Data lead |
-| | Features lead |
-| | Modeling lead |
-| | App lead |
-| | Quality lead |
+We estimate **next-day strain** from **watch-like signals** and **personal baselines** — without asking users how stressed they feel in the demo.
 
-## Prediction goal
+## Label (training only)
 
-One sentence: We predict ___ from ___ because ___.
-
-## Label definition
-
-How we define `fatigue_high` (or `stress_high`):
-
-- Rule:
-- Thresholds:
-- Known weaknesses:
+`strain_high` = 1 when: _________________________  
+(Default: Kaggle stress ≥ 7 OR sleep quality ≤ 5 — **not** shown in the app UI.)
 
 ## Success metric
 
-Primary: (e.g. recall on high fatigue at 50% precision)
+Primary: _________________________ on held-out **people**  
+Secondary: What-if scenarios feel plausible to testers
 
-Secondary:
+## What we never ask at demo time
 
-## Data sources
+- [ ] Stress level slider removed  
+- [ ] Sleep quality self-report removed  
+- [ ] Only: sleep hours, HR, steps, activity + person profile
 
-- [ ] PMData access confirmed
-- [ ] WESAD optional
+## GitHub / Drive
 
-## Google Drive link
-
-Team folder:
-
-## GitHub fork / branch policy
-
-Branch naming: `feature/weekN-short-description`
+Repo branch policy: `feature/session-N-...`  
+Team Drive folder: _________________________

@@ -1,39 +1,36 @@
-# GDSC — Wearable fatigue ML (week-by-week build)
+# StrainScope — GDSC wearable ML (week-by-week)
 
-Eight in-room sessions: mentees implement **`src/`** step by step until **`streamlit run app/streamlit_app.py`** matches the **mentor preview** (colorful gauge, presets, “Why this score?” explanations).
+**Elevator pitch:** We don’t ask how stressed you feel. We use **watch-like signals** (sleep, heart rate, steps, activity) and **your personal baseline** to estimate **next-day strain** — then show **what changes** (more sleep, more steps) move the needle most.
 
-**Dataset:** [Kaggle — Sleep Health and Lifestyle](https://www.kaggle.com/datasets/uom190346a/sleep-health-and-lifestyle-dataset)
-
-| Role | Start here |
-|------|------------|
-| **Mentee** | [docs/BUILD_PATH.md](docs/BUILD_PATH.md) → Session 1 notebook |
-| **Mentor** | [docs/MENTOR.md](docs/MENTOR.md) · `PYTHONPATH=. streamlit run app/mentor_preview.py` |
-
-**Repo:** https://github.com/pranathigadhanki-alt/gdsc-wearable-fatigue-ml
+| | |
+|--|--|
+| **Mentees** | [docs/BUILD_PATH.md](docs/BUILD_PATH.md) → fill `src/` each session |
+| **Mentor demo** | `PYTHONPATH=. streamlit run app/mentor_preview.py` |
+| **Data** | [Kaggle Sleep Health & Lifestyle](https://www.kaggle.com/datasets/uom190346a/sleep-health-and-lifestyle-dataset) |
+| **Repo** | https://github.com/pranathigadhanki-alt/gdsc-wearable-fatigue-ml |
 
 ```bash
 git clone https://github.com/pranathigadhanki-alt/gdsc-wearable-fatigue-ml.git
 cd gdsc-wearable-fatigue-ml
 pip install -r requirements.txt
 python scripts/generate_demo_data.py
-python scripts/check_session.py   # progress toward full app
+PYTHONPATH=. streamlit run app/mentor_preview.py
 ```
 
-## How the preview fits in
+## Why this needs ML
 
-| Session | Mentee work | App state |
-|---------|-------------|-----------|
-| 1–6 | `src/` + notebooks | Progress screen in `streamlit_app.py` |
-| 7 | models + explain | **Full dashboard** (same as mentor preview) |
-| 8 | Slides + demo | Same app at showcase |
+- Labels come from **hidden** self-report in training (stress/sleep quality) — **not** from sliders at demo time.
+- The model learns when **objective** patterns + **deviation from your baseline** predict strain better than one-size-fits-all rules.
+- **What-if** scenarios re-run the model — not hand-waved advice.
 
-Shared UI: `app/dashboard.py` · Checks: `app/progress.py` / `scripts/check_session.py`
+## Sessions → product
 
-## Layout
+| Session | Build | Unlocks |
+|---------|--------|---------|
+| 1–2 | Kaggle + EDA | Data story |
+| 3 | Baselines + deltas + labels | Personal «vs you» |
+| 4–6 | Metrics + sklearn | Honest evaluation |
+| 7 | Model + explain + what-if | **Full StrainScope UI** |
+| 8 | Slides + live demo | Showcase |
 
-- `src/` — fill-in-the-blank (your code)
-- `solutions/` — mentor reference
-- `weeks/` + `notebooks/` — one session each
-- `app/` — theme + dashboard + streamlit entrypoints
-
-MIT [LICENSE](LICENSE) — cite Kaggle dataset on slides.
+`python scripts/check_session.py` · MIT [LICENSE](LICENSE)
