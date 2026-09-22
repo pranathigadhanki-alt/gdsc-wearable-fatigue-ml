@@ -1,4 +1,4 @@
-"""Plain-language fatigue explanations for the demo UI."""
+"""Plain-language fatigue explanations for the demo UI — no ML jargon."""
 
 from __future__ import annotations
 
@@ -8,18 +8,6 @@ import pandas as pd
 from sklearn.pipeline import Pipeline
 
 from solutions.models import FEATURE_COLUMNS
-
-# Human labels for UI
-FEATURE_LABELS = {
-    "sleep_duration": "Sleep duration",
-    "quality_of_sleep": "Sleep quality",
-    "physical_activity_level": "Daily activity",
-    "heart_rate": "Resting heart rate",
-    "daily_steps": "Step count",
-    "age": "Age",
-    "stress_x_poor_sleep": "Stress–sleep combo (model feature)",
-    "stress_level": "Stress level",
-}
 
 
 @dataclass
@@ -31,18 +19,18 @@ class Reason:
 
 
 def rule_reasons(row: dict, reference: pd.DataFrame) -> list[Reason]:
-    """Rule-based narrative aligned with how we label fatigue in features.py."""
+    """Everyday reasons a day might feel fine or draining."""
     reasons: list[Reason] = []
     med = reference[FEATURE_COLUMNS].median()
 
-    q = row.get("quality_of_sleep", med["quality_of_sleep"])
+    q = float(row.get("quality_of_sleep", med["quality_of_sleep"]))
     if q <= 5:
         reasons.append(
             Reason(
                 "🌙",
                 "risk",
-                "Sleep quality is low",
-                f"Quality score is {q}/10. Poor sleep is one of the strongest fatigue cues in this dataset.",
+                "You didn’t feel well rested",
+                f"You rated how rested you feel at **{q:.0f}/10**. Under **6** often shows up on high-fatigue days in our sample.",
             )
         )
     elif q >= 8:
@@ -50,25 +38,19 @@ def rule_reasons(row: dict, reference: pd.DataFrame) -> list[Reason]:
             Reason(
                 "🌙",
                 "ok",
-                "Sleep quality looks solid",
-                f"Quality score is {q}/10, which usually supports recovery.",
+                "Sleep felt restorative",
+                f"**{q:.0f}/10** on «how rested you feel» is a strong recovery signal.",
             )
         )
 
-    stress = row.get("stress_level")
-    if stress is None:
-        stress = row.get("stress_level", 5)
-    if stress is None:
-        stress = 5
-    stress = float(stress)
-    q = float(row.get("quality_of_sleep", med["quality_of_sleep"]))
+    stress = float(row.get("stress_level", 5))
     if stress >= 7:
         reasons.append(
             Reason(
                 "⚡",
                 "risk",
-                "Stress is high",
-                f"You selected stress {stress:.0f}/10 — that often pairs with fatigue in this dataset.",
+                "Stress is running high",
+                f"**{stress:.0f}/10** stress is in the range where people often feel worn down the next day.",
             )
         )
     elif stress <= 4:
@@ -76,40 +58,50 @@ def rule_reasons(row: dict, reference: pd.DataFrame) -> list[Reason]:
             Reason(
                 "⚡",
                 "ok",
-                "Stress looks lower",
-                f"Stress at {stress:.0f}/10 is below a typical «crunch week» profile.",
+                "Stress is relatively low",
+                f"At **{stress:.0f}/10**, stress isn’t a big drag on your score right now.",
             )
         )
+
     if stress >= 6 and q <= 5:
         reasons.append(
             Reason(
                 "🔗",
                 "risk",
-                "Stressful day after poor sleep",
-                "High stress plus low sleep quality is a common fatigue pattern (the model uses this combo internally).",
+                "Stressful day on top of poor sleep",
+                "When stress is up **and** sleep felt poor, fatigue tends to spike — that’s the main pattern we teach in this project.",
             )
         )
 
-    hr = row.get("heart_rate", med["heart_rate"])
-    if hr >= med["heart_rate"] + 8:
+    hr = float(row.get("heart_rate", med["heart_rate"]))
+    hr_med = float(med["heart_rate"])
+    if hr >= hr_med + 8:
         reasons.append(
             Reason(
                 "❤️",
                 "risk",
-                "Heart rate is elevated",
-                f"{hr:.0f} bpm is above the demo median (~{med['heart_rate']:.0f} bpm), "
-                "which can track with stress or under-recovery.",
+                "Resting heart rate is up",
+                f"**{hr:.0f} bpm** is higher than a typical **{hr_med:.0f} bpm** in our data — sometimes linked to stress or not fully recovering.",
+            )
+        )
+    elif hr <= hr_med - 5:
+        reasons.append(
+            Reason(
+                "❤️",
+                "ok",
+                "Heart rate looks calm",
+                f"**{hr:.0f} bpm** is on the lower side compared with the sample average.",
             )
         )
 
-    sleep_h = row.get("sleep_duration", med["sleep_duration"])
+    sleep_h = float(row.get("sleep_duration", med["sleep_duration"]))
     if sleep_h < 6.2:
         reasons.append(
             Reason(
                 "⏰",
                 "risk",
-                "Short sleep window",
-                f"{sleep_h:.1f} hours is below what most rows in the dataset report.",
+                "Not much sleep time",
+                f"About **{sleep_h:.1f} hours** is short compared with people who report lower fatigue here.",
             )
         )
     elif sleep_h >= 7.5:
@@ -117,46 +109,45 @@ def rule_reasons(row: dict, reference: pd.DataFrame) -> list[Reason]:
             Reason(
                 "⏰",
                 "ok",
-                "Adequate time in bed",
-                f"{sleep_h:.1f} hours supports recovery for many people in the sample.",
+                "Solid hours of sleep",
+                f"**{sleep_h:.1f} hours** gives your body time to recover.",
             )
         )
 
-    steps = row.get("daily_steps", med["daily_steps"])
+    steps = float(row.get("daily_steps", med["daily_steps"]))
+    steps_med = float(med["daily_steps"])
     if steps < 4000:
         reasons.append(
             Reason(
                 "🚶",
                 "neutral",
-                "Low movement day",
-                "Fewer steps can mean rest — or reduced energy; context matters.",
+                "Quiet day for movement",
+                f"**{steps:,.0f} steps** is below a typical **{steps_med:,.0f}** — could be rest, or low energy; only you know which.",
+            )
+        )
+    elif steps >= steps_med * 1.2:
+        reasons.append(
+            Reason(
+                "🚶",
+                "ok",
+                "You were fairly active",
+                f"**{steps:,.0f} steps** is above average in our sample.",
+            )
+        )
+
+    activity = float(row.get("physical_activity_level", med["physical_activity_level"]))
+    act_med = float(med["physical_activity_level"])
+    if activity < act_med * 0.7:
+        reasons.append(
+            Reason(
+                "🏃",
+                "neutral",
+                "Less active minutes than usual",
+                f"**{activity:.0f} min** of activity is lower than a typical **{act_med:.0f} min** in the dataset.",
             )
         )
 
     return reasons
-
-
-def model_reasons(row: dict, pipe: Pipeline) -> list[Reason]:
-    """Top feature importances from the trained forest (global + this row direction)."""
-    clf = pipe.named_steps.get("clf")
-    if clf is None or not hasattr(clf, "feature_importances_"):
-        return []
-
-    imps = pd.Series(clf.feature_importances_, index=FEATURE_COLUMNS).sort_values(ascending=False)
-    top = imps.head(3)
-    out: list[Reason] = []
-    for name, imp in top.items():
-        label = FEATURE_LABELS.get(name, name)
-        val = row.get(name, 0)
-        out.append(
-            Reason(
-                "🧠",
-                "neutral",
-                f"Model weighs «{label}»",
-                f"Importance {imp:.0%} in the forest. Your value here: {val:.1f}.",
-            )
-        )
-    return out
 
 
 def build_summary(label: int, proba: float, reasons: list[Reason]) -> str:
@@ -165,21 +156,21 @@ def build_summary(label: int, proba: float, reasons: list[Reason]) -> str:
 
     if label == 1:
         lead = (
-            f"The model estimates a **{proba:.0%}** chance of **elevated fatigue** "
-            "based on sleep, stress, and heart-rate patterns like those in the Kaggle dataset."
+            f"We’re reading about **{proba:.0%}** likelihood of **elevated fatigue** "
+            "from how your sleep, stress, and body signals look together."
         )
     else:
         lead = (
-            f"The model estimates a **{proba:.0%}** chance of elevated fatigue — "
-            "currently closer to a **typical recovery** profile for this demo cohort."
+            f"About **{proba:.0%}** likelihood of elevated fatigue — "
+            "your inputs look **closer to a recovery day** for this demo group."
         )
 
     if risk:
-        because = " Main drivers in your profile: " + "; ".join(r.title.lower() for r in risk[:3]) + "."
+        because = " Biggest factors: **" + "**, **".join(r.title for r in risk[:3]) + "**."
     elif ok:
-        because = " Supportive signals include: " + "; ".join(r.title.lower() for r in ok[:2]) + "."
+        because = " What’s helping: **" + "**, **".join(r.title for r in ok[:2]) + "**."
     else:
-        because = " Inputs are near cohort averages — the score reflects subtle combinations of features."
+        because = " Nothing stands out as extreme — your score is driven by small combinations of sleep and stress."
 
     return lead + because
 
@@ -191,15 +182,7 @@ def explain_prediction(
     label: int,
     proba: float,
 ) -> tuple[list[Reason], str]:
-    rules = rule_reasons(row, reference)
-    model = model_reasons(row, pipe)
-    # De-duplicate by title
-    seen = set()
-    merged: list[Reason] = []
-    for r in rules + model:
-        if r.title in seen:
-            continue
-        seen.add(r.title)
-        merged.append(r)
-    summary = build_summary(label, proba, merged)
-    return merged, summary
+    del pipe  # explanations are human-first; model score already reflects patterns
+    reasons = rule_reasons(row, reference)
+    summary = build_summary(label, proba, reasons)
+    return reasons, summary

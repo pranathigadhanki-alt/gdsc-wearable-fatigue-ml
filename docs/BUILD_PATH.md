@@ -51,7 +51,7 @@ python scripts/check_session.py
 **Files:** `src/features.py`, finish `load_feature_table` in `src/data_loader.py`
 
 1. Copy rename map from docstrings (Kaggle → snake_case)
-2. Add `gender_male`, `stress_x_poor_sleep`
+2. Add `gender_male`, `stress_x_poor_sleep` (computed from stress + sleep quality — the app calculates this for users; see `app/input_helpers.py`)
 3. Implement `fatigue_label` per team charter
 4. `load_feature_table`: demo CSV → later Kaggle path
 

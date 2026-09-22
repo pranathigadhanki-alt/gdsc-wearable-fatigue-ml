@@ -218,7 +218,7 @@ def run_dashboard(
     with tab_why:
         st.markdown("#### Summary")
         st.markdown(st.session_state.get("last_summary", "Click **Update prediction** on the first tab."))
-        st.markdown("#### What shaped this result?")
+        st.markdown("#### Why we think that")
         for r in st.session_state.get("last_reasons", []):
             reason_card(r.icon, r.title, r.detail, r.tone)
 

@@ -27,9 +27,9 @@ def rule_reasons(row: dict, reference: pd.DataFrame) -> list[Reason]:
 
 
 def model_reasons(row: dict, pipe: Pipeline) -> list[Reason]:
-    """Session 7b — Top 3 RandomForest feature importances."""
-    # TODO: clf = pipe.named_steps['clf']; use feature_importances_
-    raise NotImplementedError("Session 7: implement model_reasons")
+    """Optional — prefer plain `rule_reasons` only (see solutions/explain.py)."""
+    del row, pipe
+    return []
 
 
 def build_summary(label: int, proba: float, reasons: list[Reason]) -> str:
