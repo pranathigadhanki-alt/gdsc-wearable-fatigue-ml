@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.env.*
+
+# Data & models (keep locally, not in git)
+data/pmdata/
+data/wesad/
+data/raw/
+data/processed/
+*.csv
+!data/sample_demo.csv
+models/
+*.joblib
+*.pkl
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Streamlit
+.streamlit/secrets.toml
