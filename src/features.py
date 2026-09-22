@@ -1,46 +1,63 @@
-"""Feature engineering helpers (extend each week in class)."""
+"""
+Feature engineering — Kaggle Sleep Health and Lifestyle dataset.
+
+Fill in each function during Sessions 2–3. Column names: see `src/kaggle_schema.py`.
+"""
 
 from __future__ import annotations
 
 import pandas as pd
 
+from src.kaggle_schema import (
+    COL_ACTIVITY,
+    COL_HEART_RATE,
+    COL_HR,
+    COL_PARTICIPANT,
+    COL_PERSON_ID,
+    COL_PHYSICAL_ACTIVITY,
+    COL_QUALITY,
+    COL_QUALITY_OF_SLEEP,
+    COL_SLEEP_DURATION,
+    COL_SLEEP_DURATION_H,
+    COL_STRESS,
+    COL_STRESS_LEVEL,
+    COL_STEPS,
+    COL_DAILY_STEPS,
+)
 
-def nightly_sleep_features(raw_nights: pd.DataFrame) -> pd.DataFrame:
+
+def build_features_from_kaggle(raw: pd.DataFrame) -> pd.DataFrame:
     """
-    Build one row per night from raw sleep summaries.
+    Session 3 — Rename Kaggle columns to snake_case and add helper features.
 
-    Expected columns (adapt to PMData names in Week 3):
-    participant_id, date, time_in_bed_min, sleep_min, rem_min, deep_min,
-    awake_min, resting_hr, steps
+    Required renames (use DataFrame.rename):
+      Person ID → participant_id
+      Sleep Duration → sleep_duration
+      Quality of Sleep → quality_of_sleep
+      Physical Activity Level → physical_activity_level
+      Stress Level → stress_level
+      Heart Rate → heart_rate
+      Daily Steps → daily_steps
+
+    Then:
+      - Cast age, heart_rate, daily_steps to numeric (errors='coerce').
+      - Add `gender_male`: 1 if Gender is Male else 0.
+      - Add `stress_x_poor_sleep`: stress_level * (10 - quality_of_sleep)
     """
-    required = {"participant_id", "date", "sleep_min", "time_in_bed_min", "resting_hr"}
-    missing = required - set(raw_nights.columns)
-    if missing:
-        raise ValueError(f"Missing columns for nightly features: {sorted(missing)}")
-
-    df = raw_nights.copy()
-    df["sleep_efficiency"] = df["sleep_min"] / df["time_in_bed_min"].clip(lower=1)
-    if "rem_min" in df.columns and "deep_min" in df.columns:
-        total = df["sleep_min"].clip(lower=1)
-        df["rem_ratio"] = df["rem_min"] / total
-        df["deep_ratio"] = df["deep_min"] / total
-    else:
-        df["rem_ratio"] = 0.0
-        df["deep_ratio"] = 0.0
-
-    df["steps"] = df.get("steps", 0)
-    df["hr_elevated"] = (df["resting_hr"] - df["resting_hr"].median()).clip(lower=0)
-
-    return df
+    df = raw.copy()
+    # TODO: df = df.rename(columns={ ... })
+    # TODO: numeric casts
+    # TODO: gender_male
+    # TODO: stress_x_poor_sleep
+    raise NotImplementedError("Complete build_features_from_kaggle in Session 3.")
 
 
-def rule_based_fatigue_label(df: pd.DataFrame) -> pd.Series:
+def fatigue_label(df: pd.DataFrame) -> pd.Series:
     """
-    Educational label: NOT clinical ground truth.
+    Session 3 — Rule-based label (not medical ground truth).
 
-    High fatigue if sleep efficiency is low OR resting HR is high vs cohort.
+    Default charter rule (change if your team agreed differently):
+      fatigue_high = 1 when stress_level >= 7 OR quality_of_sleep <= 5
     """
-    eff_thr = df["sleep_efficiency"].quantile(0.25)
-    hr_thr = df["resting_hr"].quantile(0.75)
-    high = (df["sleep_efficiency"] <= eff_thr) | (df["resting_hr"] >= hr_thr)
-    return high.astype(int)
+    # TODO: build boolean Series `high`, return high.astype(int)
+    raise NotImplementedError("Complete fatigue_label in Session 3.")

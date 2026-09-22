@@ -1,4 +1,8 @@
-"""Train and load sklearn pipelines (Weeks 6–10)."""
+"""
+Train and load sklearn pipelines — Sessions 5–7.
+
+Complete each function before running Streamlit with your trained model.
+"""
 
 from __future__ import annotations
 
@@ -12,52 +16,42 @@ from sklearn.model_selection import GroupShuffleSplit
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-from src.data_loader import load_feature_table, participant_day_groups
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
 MODEL_PATH = REPO_ROOT / "models" / "fatigue_classifier.joblib"
 
+# Session 3 — verify these match your feature table after engineering
 FEATURE_COLUMNS = [
-    "sleep_efficiency",
-    "rem_ratio",
-    "deep_ratio",
-    "resting_hr",
-    "steps",
-    "hr_elevated",
+    "sleep_duration",
+    "quality_of_sleep",
+    "physical_activity_level",
+    "heart_rate",
+    "daily_steps",
+    "age",
+    # TODO Session 3: include "stress_x_poor_sleep" once you create it
 ]
 
 
 def build_logistic_pipeline() -> Pipeline:
-    return Pipeline(
-        [
-            ("scale", StandardScaler()),
-            ("clf", LogisticRegression(max_iter=1000, class_weight="balanced")),
-        ]
-    )
+    """Session 5 — StandardScaler + LogisticRegression(class_weight='balanced')."""
+    # TODO: return Pipeline([("scale", StandardScaler()), ("clf", LogisticRegression(...))])
+    raise NotImplementedError("Complete build_logistic_pipeline in Session 5.")
 
 
 def build_rf_pipeline() -> Pipeline:
-    return Pipeline(
-        [
-            ("clf", RandomForestClassifier(n_estimators=200, class_weight="balanced", random_state=42)),
-        ]
-    )
+    """Session 5 — RandomForestClassifier(n_estimators=200, class_weight='balanced', random_state=42)."""
+    # TODO: return Pipeline([("clf", RandomForestClassifier(...))])
+    raise NotImplementedError("Complete build_rf_pipeline in Session 5.")
 
 
-def train_demo_model(use_demo: bool = True) -> Pipeline:
-    df = load_feature_table(use_demo=use_demo)
-    X = df[FEATURE_COLUMNS]
-    y = df["fatigue_high"]
-    groups = participant_day_groups(df)
-
-    split = GroupShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
-    train_idx, test_idx = next(split.split(X, y, groups=groups))
-    pipe = build_rf_pipeline()
-    pipe.fit(X.iloc[train_idx], y.iloc[train_idx])
-    return pipe
+def train_model(use_demo: bool = True) -> Pipeline:
+    """Session 7 — Fit your chosen pipeline on a group split (see notebook)."""
+    # TODO: from src.data_loader import load_feature_table, participant_groups
+    # TODO: load X, y; GroupShuffleSplit; fit pipeline on train_idx
+    raise NotImplementedError("Complete train_model in Session 7.")
 
 
 def save_model(pipe: Pipeline, path: Path | None = None) -> Path:
+    """Session 7 — joblib.dump to models/fatigue_classifier.joblib"""
     path = path or MODEL_PATH
     path.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(pipe, path)
@@ -65,18 +59,19 @@ def save_model(pipe: Pipeline, path: Path | None = None) -> Path:
 
 
 def load_model(path: Path | None = None) -> Pipeline:
+    """Session 7 — Load saved pipeline or train demo model if missing."""
     path = path or MODEL_PATH
     if not path.exists():
-        pipe = train_demo_model(use_demo=True)
+        pipe = train_model(use_demo=True)
         save_model(pipe, path)
     return joblib.load(path)
 
 
 def predict_fatigue(row: pd.Series | dict, pipe: Pipeline | None = None) -> tuple[int, float]:
+    """Session 7 — Return (label, probability of fatigue_high)."""
     pipe = pipe or load_model()
     if isinstance(row, dict):
         row = pd.Series(row)
-    X = row[FEATURE_COLUMNS].to_frame().T
-    proba = float(pipe.predict_proba(X)[0, 1])
-    label = int(proba >= 0.5)
-    return label, proba
+    # TODO: X = row[FEATURE_COLUMNS].to_frame().T
+    # TODO: proba = pipe.predict_proba(X)[0, 1]; return int(proba >= 0.5), float(proba)
+    raise NotImplementedError("Complete predict_fatigue in Session 7.")

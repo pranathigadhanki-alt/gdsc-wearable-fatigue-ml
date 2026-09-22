@@ -1,68 +1,48 @@
-# Wearable Stress & Fatigue Prediction — GDSC build track
+# GDSC — Wearable fatigue ML (fill-in-the-blank)
 
-An **8-session** (or **7-session**) club project for a small team (~5). Use public wearable research data (heart rate, sleep, activity) to predict **fatigue level**, then present a **Streamlit demo** at your GDSC showcase.
+Eight in-room sessions building a **stress/fatigue classifier** from the **[Kaggle Sleep Health and Lifestyle dataset](https://www.kaggle.com/datasets/uom190346a/sleep-health-and-lifestyle-dataset)**, plus a **Streamlit** demo for showcase.
 
-All workshops use **Google Colab** + this repo. **No separate homework** — each meeting advances the same codebase.
+**Students:** implement TODOs in **`src/`** — see [docs/STUDENT_GUIDE.md](docs/STUDENT_GUIDE.md).  
+**Mentor:** answer key in **`solutions/`** — [docs/MENTOR.md](docs/MENTOR.md).
 
-## Quick start (Session 1)
+**Repo:** https://github.com/pranathigadhanki-alt/gdsc-wearable-fatigue-ml
 
-1. Clone this repo (or open from GitHub in Colab).
-2. Read [docs/CURRICULUM.md](docs/CURRICULUM.md).
-3. [docs/DATA_SETUP.md](docs/DATA_SETUP.md) — PMData on team Drive (optional WESAD later).
-4. Open **`notebooks/week01_kickoff.ipynb`** in [Colab](https://colab.research.google.com/).
-
-## Repository layout
-
-| Path | Purpose |
-|------|---------|
-| [docs/](docs/) | Curriculum, Colab workflow, mentor guide, presentation checklist |
-| [weeks/](weeks/) | Per-session README — what to build **in the room** |
-| [notebooks/](notebooks/) | One Colab notebook per session (8 total) |
-| [src/](src/) | Shared Python you extend each session |
-| [app/](app/) | Streamlit demo (Sessions 7–8) |
-| [data/](data/) | Local datasets (see `.gitignore`) |
-
-## Session map
-
-| Session | ML / data focus | Project milestone (in repo) |
-|---------|-----------------|-----------------------------|
-| 1 | Labels, Colab, Drive | Team charter + first plots |
-| 2 | EDA | Figures + data dictionary notes |
-| 3 | Feature engineering | `features_v1` + `src/features.py` |
-| 4 | Splits & metrics | Baseline + chosen metric |
-| 5 | Logistic vs Random Forest | Model comparison |
-| 6 | CV, tuning, imbalance | Tuned pipeline |
-| 7 | `joblib` + Streamlit | Runnable demo app |
-| 8 | Ethics & storytelling | Slides + rehearsal |
-
-Full mentor notes: **[docs/CURRICULUM.md](docs/CURRICULUM.md)** · **[docs/INSTRUCTOR_GUIDE.md](docs/INSTRUCTOR_GUIDE.md)**
-
-## Run the demo (Session 7+)
+## Quick start
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
+git clone https://github.com/pranathigadhanki-alt/gdsc-wearable-fatigue-ml.git
+cd gdsc-wearable-fatigue-ml
 pip install -r requirements.txt
-streamlit run app/streamlit_app.py
+python scripts/generate_demo_data.py
 ```
 
-## Datasets
+1. [docs/KAGGLE_SETUP.md](docs/KAGGLE_SETUP.md) — download CSV to `data/kaggle/`
+2. [docs/CURRICULUM.md](docs/CURRICULUM.md) — session plan
+3. Open `notebooks/week01_kickoff.ipynb` in Colab
 
-- **PMData** — sleep / HR / activity (primary).
-- **WESAD** — optional stress extension (`notebooks/optional_wesad_stress.ipynb`).
+## Project layout
 
-We do not redistribute raw data; follow each dataset’s license.
+| Path | Role |
+|------|------|
+| `src/` | **Your code** (fill in the blanks) |
+| `solutions/` | Mentor reference — don’t peek until showcase |
+| `notebooks/` | Session walkthroughs |
+| `app/streamlit_app.py` | Demo UI (Session 7+) |
+| `docs/STUDENT_GUIDE.md` | TODO map by session |
 
-## Team workflow
+## Sessions at a glance
 
-Branches like `feature/session3-features`, small PRs each session — [team/ROLES.md](team/ROLES.md).
-
-## GitHub
-
-**https://github.com/pranathigadhanki-alt/gdsc-wearable-fatigue-ml**
-
-Clone: [docs/GITHUB_SETUP.md](docs/GITHUB_SETUP.md)
+| # | Topic | `src/` focus |
+|---|--------|----------------|
+| 1 | Kaggle + Colab | `load_kaggle_raw` |
+| 2 | EDA | notebook |
+| 3 | Features + labels | `features.py`, `load_feature_table` |
+| 4 | Metrics + splits | `metrics_utils.py`, `participant_groups` |
+| 5 | Logistic vs RF | `models.py` pipelines |
+| 6 | Tuning / imbalance | notebook + models |
+| 7 | joblib + Streamlit | `train_model`, `predict_fatigue`, app |
+| 8 | Showcase | Slides + ethics |
 
 ## License
 
-MIT — [LICENSE](LICENSE). Respect dataset licenses separately.
+MIT — [LICENSE](LICENSE). Follow [Kaggle dataset terms](https://www.kaggle.com/datasets/uom190346a/sleep-health-and-lifestyle-dataset) for the CSV.
