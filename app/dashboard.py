@@ -8,6 +8,12 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
+from app.input_helpers import (
+    COMPARE_LABELS,
+    UI_DEFAULT_KEYS,
+    ui_to_explain_row,
+    ui_to_model_row,
+)
 from app.ui_theme import hero, inject_theme, reason_card
 
 PRESETS = {
@@ -15,31 +21,48 @@ PRESETS = {
     "📚 Crunch week": {
         "sleep_duration": 5.8,
         "quality_of_sleep": 4,
+        "stress_level": 8,
         "physical_activity_level": 25,
         "heart_rate": 82,
         "daily_steps": 3500,
         "age": 22,
-        "stress_x_poor_sleep": 48,
     },
     "😴 Recovery day": {
         "sleep_duration": 8.0,
         "quality_of_sleep": 9,
+        "stress_level": 3,
         "physical_activity_level": 55,
         "heart_rate": 64,
         "daily_steps": 9000,
         "age": 22,
-        "stress_x_poor_sleep": 8,
     },
     "🏃 Active, short sleep": {
         "sleep_duration": 6.0,
         "quality_of_sleep": 6,
+        "stress_level": 7,
         "physical_activity_level": 85,
         "heart_rate": 78,
         "daily_steps": 12000,
         "age": 28,
-        "stress_x_poor_sleep": 28,
     },
 }
+
+
+def _default_ui(df: pd.DataFrame, feature_columns: list[str]) -> dict:
+    med = df[feature_columns].median()
+    ui = {
+        "sleep_duration": float(med["sleep_duration"]),
+        "quality_of_sleep": int(med["quality_of_sleep"]),
+        "heart_rate": int(med["heart_rate"]),
+        "physical_activity_level": int(med["physical_activity_level"]),
+        "daily_steps": int(med["daily_steps"]),
+        "age": int(med["age"]),
+    }
+    if "stress_level" in df.columns:
+        ui["stress_level"] = int(df["stress_level"].median())
+    else:
+        ui["stress_level"] = 5
+    return ui
 
 
 def run_dashboard(
@@ -68,7 +91,8 @@ def run_dashboard(
         return pipe, df
 
     pipe, df = get_model_and_data()
-    defaults = df[feature_columns].median()
+    defaults_ui = _default_ui(df, feature_columns)
+    medians_ui = dict(defaults_ui)
 
     with st.sidebar:
         st.markdown("### 🎛️ Quick scenarios")
@@ -80,52 +104,76 @@ def run_dashboard(
 
     hero("Stress & Fatigue Insight", subtitle)
 
-    if "row" not in st.session_state:
-        st.session_state.row = {c: float(defaults[c]) for c in feature_columns}
+    if "ui" not in st.session_state:
+        st.session_state.ui = defaults_ui
 
     if PRESETS[preset_name] is not None:
-        st.session_state.row = dict(PRESETS[preset_name])
+        st.session_state.ui = dict(PRESETS[preset_name])
         st.session_state.pop("last_proba", None)
 
     tab_input, tab_why, tab_data = st.tabs(["✨ Your day", "💬 Why this score?", "📊 Cohort data"])
 
     with tab_input:
         left, mid, right = st.columns([1.1, 1, 1])
-        row = st.session_state.row
+        ui = st.session_state.ui
 
         with left:
-            st.markdown("#### Adjust your signals")
-            row["sleep_duration"] = st.slider(
-                "🌙 Sleep duration (hours)", 5.0, 9.0, float(row.get("sleep_duration", defaults["sleep_duration"])), 0.1
+            st.markdown("#### Sleep & stress")
+            ui["sleep_duration"] = st.slider(
+                "🌙 Sleep last night (hours)",
+                5.0,
+                9.0,
+                float(ui.get("sleep_duration", medians_ui["sleep_duration"])),
+                0.1,
+                help="How long you slept — from your watch or best guess.",
             )
-            row["quality_of_sleep"] = st.slider(
-                "✨ Sleep quality (1–10)", 1, 10, int(row.get("quality_of_sleep", defaults["quality_of_sleep"]))
+            ui["quality_of_sleep"] = st.slider(
+                "✨ How rested do you feel? (1–10)",
+                1,
+                10,
+                int(ui.get("quality_of_sleep", medians_ui["quality_of_sleep"])),
+                help="1 = exhausted, 10 = fully refreshed.",
             )
-            row["stress_x_poor_sleep"] = st.slider(
-                "⚡ Stress × poor sleep", 0, 80, int(row.get("stress_x_poor_sleep", defaults["stress_x_poor_sleep"]))
-            )
-            row["heart_rate"] = st.slider(
-                "❤️ Heart rate (bpm)", 55, 95, int(row.get("heart_rate", defaults["heart_rate"]))
+            ui["stress_level"] = st.slider(
+                "⚡ Stress right now (1–10)",
+                1,
+                10,
+                int(ui.get("stress_level", medians_ui["stress_level"])),
+                help="1 = calm, 10 = very stressed. No math — we combine this with sleep for the model.",
             )
 
         with mid:
-            row["physical_activity_level"] = st.slider(
-                "🏃 Activity (min/day)",
+            st.markdown("#### Body & activity")
+            ui["heart_rate"] = st.slider(
+                "❤️ Resting heart rate (bpm)",
+                55,
+                95,
+                int(ui.get("heart_rate", medians_ui["heart_rate"])),
+            )
+            ui["physical_activity_level"] = st.slider(
+                "🏃 Active minutes yesterday",
                 0,
                 100,
-                int(row.get("physical_activity_level", defaults["physical_activity_level"])),
+                int(ui.get("physical_activity_level", medians_ui["physical_activity_level"])),
             )
-            row["daily_steps"] = st.slider(
-                "🚶 Daily steps", 1000, 15000, int(row.get("daily_steps", defaults["daily_steps"])), 500
+            ui["daily_steps"] = st.slider(
+                "🚶 Steps yesterday",
+                1000,
+                15000,
+                int(ui.get("daily_steps", medians_ui["daily_steps"])),
+                500,
             )
-            row["age"] = st.slider("🎂 Age", 18, 70, int(row.get("age", defaults["age"])))
-            st.session_state.row = row
+            ui["age"] = st.slider("🎂 Age", 18, 70, int(ui.get("age", medians_ui["age"])))
+            st.session_state.ui = ui
             run = st.button("🔮 Update prediction", type="primary", use_container_width=True)
 
         with right:
+            model_row = ui_to_model_row(ui)
+            explain_row = ui_to_explain_row(ui, model_row)
+
             if run or "last_proba" not in st.session_state:
-                label, proba = predict_fatigue(row, pipe)
-                reasons, summary = explain_prediction(row, df, pipe, label, proba)
+                label, proba = predict_fatigue(model_row, pipe)
+                reasons, summary = explain_prediction(explain_row, df, pipe, label, proba)
                 st.session_state.update(
                     last_proba=proba,
                     last_label=label,
@@ -174,15 +222,20 @@ def run_dashboard(
         for r in st.session_state.get("last_reasons", []):
             reason_card(r.icon, r.title, r.detail, r.tone)
 
-        st.markdown("#### Your values vs cohort median")
+        st.markdown("#### You vs typical in our dataset")
+        ui = st.session_state.ui
+        cohort = medians_ui
         compare = pd.DataFrame(
             {
-                "You": [st.session_state.row[c] for c in feature_columns],
-                "Cohort median": [defaults[c] for c in feature_columns],
+                "You": [ui[k] for k in COMPARE_LABELS],
+                "Typical": [cohort[k] for k in COMPARE_LABELS],
             },
-            index=[c.replace("_", " ").title() for c in feature_columns],
+            index=list(COMPARE_LABELS.values()),
         )
         st.bar_chart(compare, color=["#a855f7", "#64748b"], stack=False)
 
     with tab_data:
-        st.dataframe(df[feature_columns + ["fatigue_high"]].head(25), use_container_width=True, height=400)
+        show_cols = feature_columns + ["fatigue_high"]
+        if "stress_level" in df.columns:
+            show_cols = ["stress_level"] + show_cols
+        st.dataframe(df[show_cols].head(25), use_container_width=True, height=400)

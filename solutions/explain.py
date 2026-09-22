@@ -17,7 +17,8 @@ FEATURE_LABELS = {
     "heart_rate": "Resting heart rate",
     "daily_steps": "Step count",
     "age": "Age",
-    "stress_x_poor_sleep": "Stress × poor sleep",
+    "stress_x_poor_sleep": "Stress–sleep combo (model feature)",
+    "stress_level": "Stress level",
 }
 
 
@@ -54,23 +55,38 @@ def rule_reasons(row: dict, reference: pd.DataFrame) -> list[Reason]:
             )
         )
 
-    stress_proxy = row.get("stress_x_poor_sleep", 0)
-    if stress_proxy >= 35:
+    stress = row.get("stress_level")
+    if stress is None:
+        stress = row.get("stress_level", 5)
+    if stress is None:
+        stress = 5
+    stress = float(stress)
+    q = float(row.get("quality_of_sleep", med["quality_of_sleep"]))
+    if stress >= 7:
         reasons.append(
             Reason(
                 "⚡",
                 "risk",
-                "Stress and sleep are interacting",
-                "High stress combined with poor sleep pushes the model toward fatigue.",
+                "Stress is high",
+                f"You selected stress {stress:.0f}/10 — that often pairs with fatigue in this dataset.",
             )
         )
-    elif stress_proxy <= 15:
+    elif stress <= 4:
         reasons.append(
             Reason(
                 "⚡",
                 "ok",
-                "Stress load looks manageable",
-                "Stress × sleep interaction is in a lower range for this cohort.",
+                "Stress looks lower",
+                f"Stress at {stress:.0f}/10 is below a typical «crunch week» profile.",
+            )
+        )
+    if stress >= 6 and q <= 5:
+        reasons.append(
+            Reason(
+                "🔗",
+                "risk",
+                "Stressful day after poor sleep",
+                "High stress plus low sleep quality is a common fatigue pattern (the model uses this combo internally).",
             )
         )
 
