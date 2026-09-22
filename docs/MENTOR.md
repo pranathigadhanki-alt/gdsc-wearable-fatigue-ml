@@ -1,16 +1,17 @@
 # Mentor notes
 
-## Answer key
+## Answer key & preview
 
-Complete working code is in **`solutions/`** (same filenames as `src/`). Validate the project with:
+Complete code: **`solutions/`**. Same UI as mentees: **`app/dashboard.py`**.
 
 ```bash
-cd gdsc-wearable-fatigue-ml
 python scripts/generate_demo_data.py
+PYTHONPATH=. streamlit run app/mentor_preview.py   # full preview now
 PYTHONPATH=. python scripts/check_progress.py --mentor
+python scripts/check_session.py                    # mentee progress view
 ```
 
-Copy `solutions/*.py` over `src/` only for dry-runs — students should fill `src/` themselves.
+Walk through **[BUILD_PATH.md](BUILD_PATH.md)** one session per meeting. Do not paste `solutions/` into student PRs.
 
 ## Kaggle
 

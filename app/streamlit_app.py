@@ -1,9 +1,8 @@
 """
-Streamlit demo — Sessions 7–8 (after `src/models.py` + `src/explain.py` are complete).
+Mentee app — same UI as mentor preview when `src/` is complete (Sessions 1–7).
 
-Mentor preview (full UI): PYTHONPATH=. streamlit run app/mentor_preview.py
-
-Run: streamlit run app/streamlit_app.py
+Run: PYTHONPATH=. streamlit run app/streamlit_app.py
+Progress: python scripts/check_session.py
 """
 
 from __future__ import annotations
@@ -18,30 +17,36 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from app.ui_theme import hero, inject_theme
+from app.progress import ready_for_dashboard, session_status
 
 st.set_page_config(page_title="Fatigue Insight", page_icon="💤", layout="wide")
-inject_theme()
 
-# TODO Session 7: uncomment when ready
-# from src.data_loader import load_feature_table
-# from src.explain import explain_prediction
-# from src.models import FEATURE_COLUMNS, load_model, predict_fatigue
+if not ready_for_dashboard():
+    inject_theme()
+    hero("Stress & Fatigue Insight", "Build week by week — your app matches the mentor preview when Session 7 is done.")
+    st.markdown("### Your progress")
+    for line in session_status():
+        st.markdown(line)
+    st.markdown(
+        """
+Follow **[docs/BUILD_PATH.md](../docs/BUILD_PATH.md)** and the notebook for each session.
 
-hero(
-    "Stress & Fatigue Insight",
-    "Student build — wire up `src/models.py` and `src/explain.py`, then copy patterns from `app/mentor_preview.py`.",
-)
-
-st.warning(
-    "**Work in progress.** For the full colorful demo with explanations, mentors run: "
-    "`PYTHONPATH=. streamlit run app/mentor_preview.py`"
-)
-
-st.markdown(
-    """
-### Session 7 checklist
-1. Implement `predict_fatigue` in `src/models.py`
-2. Implement `explain_prediction` in `src/explain.py` (see `solutions/explain.py`)
-3. Reuse `app/ui_theme.py` and tabs from `app/mentor_preview.py`
+When all Session 7 checks pass, restart this app to load the full dashboard.
 """
+    )
+    st.stop()
+
+from app.dashboard import run_dashboard
+from src.data_loader import load_feature_table
+from src.explain import explain_prediction
+from src.models import FEATURE_COLUMNS, predict_fatigue, save_model, train_model
+
+run_dashboard(
+    load_feature_table=load_feature_table,
+    feature_columns=FEATURE_COLUMNS,
+    train_model=train_model,
+    save_model=save_model,
+    predict_fatigue=predict_fatigue,
+    explain_prediction=explain_prediction,
+    subtitle="Built by your team — same experience as the GDSC demo.",
 )

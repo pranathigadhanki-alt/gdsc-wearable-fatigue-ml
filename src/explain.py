@@ -1,13 +1,41 @@
 """
-Session 7+ — Plain-language explanations for Streamlit.
+Session 7 — Plain-language explanations (powers the «Why this score?» tab).
 
-Mirror the logic in `solutions/explain.py` once your model works.
+When done, matches behavior in `solutions/explain.py`.
 """
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import pandas as pd
 from sklearn.pipeline import Pipeline
+
+
+@dataclass
+class Reason:
+    icon: str
+    tone: str  # risk | ok | neutral
+    title: str
+    detail: str
+
+
+def rule_reasons(row: dict, reference: pd.DataFrame) -> list[Reason]:
+    """Session 7a — Sleep quality, stress×sleep, heart rate, sleep hours (see BUILD_PATH.md)."""
+    # TODO: append Reason(...) objects when thresholds crossed
+    raise NotImplementedError("Session 7: implement rule_reasons")
+
+
+def model_reasons(row: dict, pipe: Pipeline) -> list[Reason]:
+    """Session 7b — Top 3 RandomForest feature importances."""
+    # TODO: clf = pipe.named_steps['clf']; use feature_importances_
+    raise NotImplementedError("Session 7: implement model_reasons")
+
+
+def build_summary(label: int, proba: float, reasons: list[Reason]) -> str:
+    """Session 7c — One paragraph for the Summary section."""
+    # TODO: lead sentence with proba; mention top risk reasons
+    raise NotImplementedError("Session 7: implement build_summary")
 
 
 def explain_prediction(
@@ -16,13 +44,7 @@ def explain_prediction(
     pipe: Pipeline,
     label: int,
     proba: float,
-) -> tuple[list, str]:
-    """
-    TODO Session 7:
-      1. List 2–4 reasons (sleep quality, stress proxy, heart rate, sleep hours).
-      2. Optionally use RandomForest feature_importances_.
-      3. Return (list of reason dicts or dataclass, summary paragraph string).
-
-    See `solutions/explain.py` for mentor reference.
-    """
-    raise NotImplementedError("Complete explain_prediction in Session 7.")
+) -> tuple[list[Reason], str]:
+    """Session 7 — Called from app/dashboard.py on every prediction."""
+    # TODO: rules = rule_reasons(...); model = model_reasons(...); merge; summary = build_summary(...)
+    raise NotImplementedError("Session 7: wire explain_prediction")

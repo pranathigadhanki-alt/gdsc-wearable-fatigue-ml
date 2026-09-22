@@ -27,7 +27,7 @@ FEATURE_COLUMNS = [
     "heart_rate",
     "daily_steps",
     "age",
-    # TODO Session 3: include "stress_x_poor_sleep" once you create it
+    "stress_x_poor_sleep",  # Session 3 — must exist in your feature table
 ]
 
 

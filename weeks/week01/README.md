@@ -1,24 +1,26 @@
-# Session 1: Kickoff
+# Session 1: Kickoff & Kaggle
 
-**ML focus:** Supervised labels, Colab, Drive
+**Notebook:** [`notebooks/week01_kickoff.ipynb`](../../notebooks/week01_kickoff.ipynb)  
+**Build guide:** [docs/BUILD_PATH.md](../../docs/BUILD_PATH.md) (Session 1)  
+**Check progress:** `python scripts/check_session.py`
 
-**Notebook:** [`notebooks/week01_kickoff.ipynb`](../../notebooks/week01_kickoff.ipynb) · [Colab workflow](../../docs/GOOGLE_COLAB.md)
+## Edit this session
 
-## Goal for this meeting
+**Primary file(s):** `src/data_loader.py`
 
-Advance the **shared project** — not a separate assignment. By adjournment:
+## Done when
 
-**Team charter merged; notebook runs; label plot**
+- [ ] Implement `load_kaggle_raw`
+- [ ] Merge team charter
+- [ ] Run demo: `python scripts/generate_demo_data.py`
 
-## Suggested flow (~90–120 min)
+## Flow (~90–120 min)
 
-1. Quick concept (mentor) — see [docs/INSTRUCTOR_GUIDE.md](../../docs/INSTRUCTOR_GUIDE.md)
-2. Run notebook together in Colab
-3. Pairs edit `src/` or `app/`; open a PR before you leave
-4. If time runs out, start next session by finishing the same PR
+1. Mentor concept (5–15 min)
+2. Work through the notebook in Colab
+3. Implement the `src/` TODOs for this session
+4. PR before you leave; run `check_session.py`
 
-## Checklist
+## Preview alignment
 
-- [ ] `git pull origin main` at start
-- [ ] Notebook runs top-to-bottom
-- [ ] At least one PR merged or ready for review
+The final app (`app/streamlit_app.py`) uses `app/dashboard.py` — **you do not rewrite the UI**. Each session adds backend logic until Session 7 unlocks the full colorful dashboard (gauge, explanations, presets).

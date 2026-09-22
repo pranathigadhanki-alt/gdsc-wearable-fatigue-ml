@@ -1,65 +1,109 @@
 #!/usr/bin/env python3
-"""Create weeks/weekNN/README.md for 8 GDSC sessions."""
+"""Create weeks/weekNN/README.md — tied to BUILD_PATH.md and the preview UI."""
 
 from pathlib import Path
-import shutil
 
 ROOT = Path(__file__).resolve().parents[1]
 
 SESSIONS = [
-    (1, "Kickoff", "Supervised labels, Colab, Drive", "week01_kickoff.ipynb", "Team charter merged; notebook runs; label plot"),
-    (2, "EDA", "Distributions & correlation", "week02_eda.ipynb", "Notebook holds 3 plots + insight bullets"),
-    (3, "Features", "Sleep/HR feature table", "week03_features.ipynb", "`src/features.py` updated; features path on Drive"),
-    (4, "Splits & metrics", "Group splits, baselines, F1/recall", "week04_splits_and_metrics.ipynb", "Metric chosen; baseline + confusion matrix"),
-    (5, "Model compare", "Logistic vs Random Forest", "week05_model_compare.ipynb", "Comparison table; pick model family"),
-    (6, "Tuning & imbalance", "CV, GridSearch, class weights", "week06_tuning_and_imbalance.ipynb", "Tuned pipeline + best_params.json"),
-    (7, "Streamlit", "joblib + demo app", "week07_model_and_streamlit.ipynb", "Everyone runs Streamlit once; PR merged"),
-    (8, "Showcase", "Ethics, Slides, rehearsal", "week08_showcase.ipynb", "Slides linked; dry-run demo"),
+    (
+        1,
+        "Kickoff & Kaggle",
+        "week01_kickoff.ipynb",
+        "src/data_loader.py",
+        ["Implement `load_kaggle_raw`", "Merge team charter", "Run demo: `python scripts/generate_demo_data.py`"],
+    ),
+    (
+        2,
+        "EDA",
+        "week02_eda.ipynb",
+        "notebook only",
+        ["3 plots + bullets in notebook", "Map Kaggle columns → model inputs"],
+    ),
+    (
+        3,
+        "Features & labels",
+        "week03_features.ipynb",
+        "src/features.py, src/data_loader.py",
+        ["`build_features_from_kaggle`", "`fatigue_label`", "`load_feature_table(use_demo=True)`"],
+    ),
+    (
+        4,
+        "Splits & metrics",
+        "week04_splits_and_metrics.ipynb",
+        "src/metrics_utils.py, participant_groups",
+        ["Group split by person", "Baseline + confusion matrix", "`evaluate_classifier`"],
+    ),
+    (
+        5,
+        "Model compare",
+        "week05_model_compare.ipynb",
+        "src/models.py",
+        ["`build_logistic_pipeline`", "`build_rf_pipeline`", "Compare in notebook"],
+    ),
+    (
+        6,
+        "Tuning",
+        "week06_tuning_and_imbalance.ipynb",
+        "notebook (+ optional best_params.json)",
+        ["GridSearchCV", "Discuss class imbalance"],
+    ),
+    (
+        7,
+        "Full preview app",
+        "week07_model_and_streamlit.ipynb",
+        "src/models.py, src/explain.py",
+        [
+            "`train_model`, `predict_fatigue`, `explain_prediction`",
+            "`PYTHONPATH=. streamlit run app/streamlit_app.py` → same UI as mentor preview",
+            "`python scripts/check_session.py` → Dashboard ready",
+        ],
+    ),
+    (
+        8,
+        "Showcase",
+        "week08_showcase.ipynb",
+        "Google Slides",
+        ["Dry-run demo", "Ethics slide", "Kaggle citation"],
+    ),
 ]
 
 TEMPLATE = """# Session {n}: {title}
 
-**ML focus:** {ml}
+**Notebook:** [`notebooks/{notebook}`](../../notebooks/{notebook})  
+**Build guide:** [docs/BUILD_PATH.md](../../docs/BUILD_PATH.md) (Session {n})  
+**Check progress:** `python scripts/check_session.py`
 
-**Notebook:** [`notebooks/{notebook}`](../../notebooks/{notebook}) · [Colab workflow](../../docs/GOOGLE_COLAB.md)
+## Edit this session
 
-## Goal for this meeting
+**Primary file(s):** `{files}`
 
-Advance the **shared project** — not a separate assignment. By adjournment:
+## Done when
 
-**{output}**
+{done_list}
 
-## Suggested flow (~90–120 min)
+## Flow (~90–120 min)
 
-1. Quick concept (mentor) — see [docs/INSTRUCTOR_GUIDE.md](../../docs/INSTRUCTOR_GUIDE.md)
-2. Run notebook together in Colab
-3. Pairs edit `src/` or `app/`; open a PR before you leave
-4. If time runs out, start next session by finishing the same PR
+1. Mentor concept (5–15 min)
+2. Work through the notebook in Colab
+3. Implement the `src/` TODOs for this session
+4. PR before you leave; run `check_session.py`
 
-## Checklist
+## Preview alignment
 
-- [ ] `git pull origin main` at start
-- [ ] Notebook runs top-to-bottom
-- [ ] At least one PR merged or ready for review
+The final app (`app/streamlit_app.py`) uses `app/dashboard.py` — **you do not rewrite the UI**. Each session adds backend logic until Session 7 unlocks the full colorful dashboard (gauge, explanations, presets).
 """
 
 
 def main() -> None:
-    weeks_dir = ROOT / "weeks"
-    for child in weeks_dir.iterdir():
-        if child.is_dir() and child.name.startswith("week"):
-            num = child.name.replace("week", "")
-            if num.isdigit() and int(num) > 8:
-                shutil.rmtree(child)
-                print("Removed", child)
-
-    for n, title, ml, notebook, output in SESSIONS:
-        folder = weeks_dir / f"week{n:02d}"
+    for n, title, notebook, files, done in SESSIONS:
+        folder = ROOT / "weeks" / f"week{n:02d}"
         folder.mkdir(parents=True, exist_ok=True)
+        done_md = "\n".join(f"- [ ] {d}" for d in done)
         (folder / "README.md").write_text(
-            TEMPLATE.format(n=n, title=title, ml=ml, notebook=notebook, output=output)
+            TEMPLATE.format(n=n, title=title, notebook=notebook, files=files, done_list=done_md)
         )
-    print("Session READMEs written (8 weeks).")
+    print("Session READMEs updated.")
 
 
 if __name__ == "__main__":

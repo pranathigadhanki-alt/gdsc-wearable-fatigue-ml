@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate Colab-ready session notebooks."""
+"""Generate Colab session notebooks aligned with BUILD_PATH.md."""
 
 import json
 from pathlib import Path
@@ -7,82 +7,105 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 NOTEBOOKS = ROOT / "notebooks"
 
+SETUP = """!git clone https://github.com/pranathigadhanki-alt/gdsc-wearable-fatigue-ml.git
+%cd gdsc-wearable-fatigue-ml
+!pip install -q -r requirements.txt
+!python scripts/generate_demo_data.py"""
+
 WEEKS = [
     (
         "week01_kickoff",
-        "Session 1 — Kaggle, Colab, charter",
+        "Session 1 — Kaggle + load_kaggle_raw",
         [
-            "Fill-in-the-blank project: you implement `src/` each session. Dataset: Kaggle Sleep Health and Lifestyle.",
+            "## Goal\nImplement `src/data_loader.load_kaggle_raw` so your team can read the Kaggle CSV.\n\nSee **docs/BUILD_PATH.md** Session 1.",
             "from google.colab import drive\ndrive.mount('/content/drive')",
-            "!git clone https://github.com/pranathigadhanki-alt/gdsc-wearable-fatigue-ml.git\n%cd gdsc-wearable-fatigue-ml\n!pip install -q -r requirements.txt",
-            "# Kaggle API — see docs/KAGGLE_SETUP.md\n# !pip install -q kaggle\n# !kaggle datasets download -d uom190346a/sleep-health-and-lifestyle-dataset -p data/kaggle --unzip",
-            "!python scripts/generate_demo_data.py",
-            "import pandas as pd\nfrom src.data_loader import load_feature_table\ndf = load_feature_table(use_demo=True)\ndf.head()",
-            "**In session:** Implement `load_kaggle_raw` in `src/data_loader.py`, then load real CSV when ready.",
+            SETUP,
+            "# Download Kaggle CSV to data/kaggle/ — see docs/KAGGLE_SETUP.md",
+            "import pandas as pd\nfrom src.data_loader import load_feature_table\nload_feature_table(use_demo=True).head()",
+            "from src.kaggle_schema import KAGGLE_FILENAME\nprint('Expect file:', KAGGLE_FILENAME)",
+            "## PR checklist\n- [ ] team_charter.md\n- [ ] load_kaggle_raw implemented\n- [ ] python scripts/check_session.py",
         ],
     ),
     (
         "week02_eda",
-        "Session 2 — EDA on Kaggle columns",
+        "Session 2 — EDA",
         [
-            "from src.data_loader import load_kaggle_raw, load_feature_table\n# raw = load_kaggle_raw()  # after Session 1\ndf = load_feature_table(use_demo=True)",
-            "import seaborn as sns\nimport matplotlib.pyplot as plt\ndf.describe().T",
-            "sns.scatterplot(data=df, x='stress_level', y='quality_of_sleep', hue='fatigue_high')",
-            "**In session:** Notes in notebook — which columns predict fatigue?",
+            "## Goal\nThree figures + bullets — no new `src/` required.\n\nInforms Session 3 features.",
+            SETUP,
+            "import seaborn as sns\nimport matplotlib.pyplot as plt\nfrom src.data_loader import load_feature_table\ndf = load_feature_table(use_demo=True)",
+            "df.describe().T",
+            "sns.scatterplot(data=df, x='quality_of_sleep', y='stress_level', hue='fatigue_high')",
+            "df['fatigue_high'].value_counts().plot(kind='bar', title='Label balance')",
+            "## Write in this notebook\n1. Which columns predict fatigue?\n2. Any outliers?\n3. Charter label still OK?",
         ],
     ),
     (
         "week03_features",
-        "Session 3 — Feature engineering",
+        "Session 3 — Features",
         [
-            "from src.features import build_features_from_kaggle, fatigue_label\nfrom src.data_loader import load_kaggle_raw",
-            "# raw = load_kaggle_raw()\n# feats = build_features_from_kaggle(raw)\n# feats['fatigue_high'] = fatigue_label(feats)",
-            "**In session:** Complete `src/features.py` and `load_feature_table` in `src/data_loader.py`.",
+            "## Goal\nComplete `src/features.py` + `load_feature_table`.\n\nAfter this, check_session Session 3 ✅",
+            SETUP,
+            "from src.features import build_features_from_kaggle, fatigue_label",
+            "from src.data_loader import load_kaggle_raw, load_feature_table",
+            "# raw = load_kaggle_raw()  # when CSV on Drive\n# feats = build_features_from_kaggle(raw)\n# feats['fatigue_high'] = fatigue_label(feats)",
+            "load_feature_table(use_demo=True).head()",
         ],
     ),
     (
         "week04_splits_and_metrics",
         "Session 4 — Splits & metrics",
         [
-            "from sklearn.model_selection import GroupShuffleSplit\nfrom sklearn.dummy import DummyClassifier\nfrom src.data_loader import load_feature_table, participant_groups\nfrom src.models import FEATURE_COLUMNS",
-            "df = load_feature_table(use_demo=True)\n# X, y, groups, split, baseline — after TODOs done",
-            "from src.metrics_utils import evaluate_classifier, plot_confusion_matrix",
+            "## Goal\n`participant_groups`, `evaluate_classifier`, baseline in notebook.",
+            SETUP,
+            "from sklearn.model_selection import GroupShuffleSplit\nfrom sklearn.dummy import DummyClassifier\nfrom src.data_loader import load_feature_table, participant_groups\nfrom src.models import FEATURE_COLUMNS\nfrom src.metrics_utils import evaluate_classifier, plot_confusion_matrix",
+            "df = load_feature_table(use_demo=True)\nX, y = df[FEATURE_COLUMNS], df['fatigue_high']\ngroups = participant_groups(df)",
+            "# TODO: split, fit DummyClassifier, evaluate_classifier, plot_confusion_matrix",
         ],
     ),
     (
         "week05_model_compare",
-        "Session 5 — Logistic vs Random Forest",
+        "Session 5 — Logistic vs RF",
         [
-            "from src.models import build_logistic_pipeline, build_rf_pipeline, FEATURE_COLUMNS",
-            "**In session:** Implement both pipelines in `src/models.py` and compare metrics.",
+            "## Goal\nImplement pipelines in `src/models.py`, compare in notebook.",
+            SETUP,
+            "from src.models import build_logistic_pipeline, build_rf_pipeline, FEATURE_COLUMNS\nfrom src.data_loader import load_feature_table",
+            "# Train both on train_idx; table of precision/recall/F1",
         ],
     ),
     (
         "week06_tuning_and_imbalance",
-        "Session 6 — Tuning & imbalance",
+        "Session 6 — Tuning",
         [
-            "from sklearn.model_selection import GridSearchCV\nfrom imblearn.over_sampling import SMOTE",
+            "## Goal\nGridSearchCV + imbalance discussion.",
+            SETUP,
+            "from sklearn.model_selection import GridSearchCV",
+            "# Optional: imblearn SMOTE — when is it valid for grouped data?",
         ],
     ),
     (
         "week07_model_and_streamlit",
-        "Session 7 — Save model & Streamlit",
+        "Session 7 — Unlock the preview",
         [
-            "from src.models import train_model, save_model\n# pipe = train_model(use_demo=True); save_model(pipe)",
-            "# !streamlit run app/streamlit_app.py",
+            "## Goal\nFinish `train_model`, `predict_fatigue`, `src/explain.py`.\n\nThen:\n`PYTHONPATH=. streamlit run app/streamlit_app.py`\n\nSame UI as mentor preview.",
+            SETUP,
+            "from src.models import train_model, save_model, predict_fatigue\nfrom src.explain import explain_prediction",
+            "# pipe = train_model(use_demo=True); save_model(pipe)",
+            "!python scripts/check_session.py",
+            "# Local: !pip install -q streamlit plotly && PYTHONPATH=. streamlit run app/streamlit_app.py",
         ],
     ),
     (
         "week08_showcase",
         "Session 8 — Showcase",
         [
-            "Slides: Kaggle citation, label rule, confusion matrix, live Streamlit, limitations.",
+            "## Goal\nSlides + live demo from **your** streamlit_app.py\n\nSee docs/PRESENTATION_GUIDE.md",
+            "- Kaggle citation\n- Label rule\n- Confusion matrix slide\n- Live gauge + Why tab\n- Not medical advice",
         ],
     ),
     (
         "optional_wesad_stress",
-        "Optional — WESAD extension",
-        ["For teams finishing early — wearable lab stress dataset."],
+        "Optional — WESAD",
+        ["Extension for teams finishing early."],
     ),
 ]
 
@@ -102,9 +125,7 @@ def cell(source: str, cell_type: str = "code") -> dict:
 def build_notebook(title: str, parts: list[str]) -> dict:
     cells = [cell(f"# {title}\n", "markdown")]
     for part in parts:
-        if part.startswith("**") or part.startswith("#") or part.startswith("Slides") or part.startswith("Fill"):
-            cells.append(cell(part, "markdown"))
-        elif part.startswith("For teams"):
+        if part.startswith("##") or part.startswith("- ") or part.startswith("Extension"):
             cells.append(cell(part, "markdown"))
         else:
             cells.append(cell(part, "code"))

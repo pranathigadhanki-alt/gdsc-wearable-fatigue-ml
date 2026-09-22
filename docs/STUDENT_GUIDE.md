@@ -1,32 +1,36 @@
-# Student workbook guide
+# Student workbook
 
-This repo is a **fill-in-the-blank** project. You implement ML in **`src/`** session by session; notebooks walk you through each step.
+## One path to the preview
 
-## Where to write code
+1. Read **[BUILD_PATH.md](BUILD_PATH.md)** — session-by-session through the same UI as the mentor demo.
+2. Each session: open **`weeks/weekNN/README.md`** + **`notebooks/weekNN_*.ipynb`**.
+3. Fill in **`src/`** (search `TODO` and `NotImplementedError`).
+4. After each session: `python scripts/check_session.py`
 
-| Session | File | What you implement |
-|---------|------|-------------------|
-| 1 | `src/data_loader.py` | `load_kaggle_raw` |
-| 3 | `src/features.py`, `src/data_loader.py` | Features + `load_feature_table` |
-| 4 | `src/metrics_utils.py`, `src/data_loader.py` | Metrics + `participant_groups` |
-| 5–7 | `src/models.py` | Pipelines, train, predict |
-| 7–8 | `app/streamlit_app.py` | UI tweaks (optional) |
+## What you do NOT rebuild
 
-Search for **`TODO`** and **`NotImplementedError`** in `src/`.
+The Streamlit **layout** is already in the repo:
+
+- `app/ui_theme.py` — styling  
+- `app/dashboard.py` — tabs, gauge, presets, explanation panels  
+- `app/streamlit_app.py` — connects **your** `src/` when Session 7 is complete  
+
+Until Session 7, `streamlit_app.py` shows a **progress checklist**.
+
+## Files by session
+
+| Session | `src/` |
+|---------|--------|
+| 1 | `data_loader.load_kaggle_raw` |
+| 3 | `features.py`, `load_feature_table` |
+| 4 | `metrics_utils.py`, `participant_groups` |
+| 5 | `build_*_pipeline` |
+| 7 | `train_model`, `predict_fatigue`, `explain.py` |
 
 ## Data
 
-1. Practice: `data/sample_demo.csv` (already in repo).
-2. Real: download Kaggle CSV — [KAGGLE_SETUP.md](KAGGLE_SETUP.md).
+[KAGGLE_SETUP.md](KAGGLE_SETUP.md) — practice with `data/sample_demo.csv` first.
 
-## How to check your work
+## Mentor key
 
-- Notebook for that session runs without error.
-- `pytest` (optional) — mentor may run `scripts/check_progress.py`.
-- Compare your logic to the team charter label rules (Session 1).
-
-## Rules
-
-- Do not commit `data/kaggle/*.csv`.
-- Open PRs to `main` each session.
-- Do not open the `solutions/` folder until after the showcase (mentor reference).
+`solutions/` — do not copy until showcase unless your mentor says so.

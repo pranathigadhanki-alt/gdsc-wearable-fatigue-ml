@@ -1,48 +1,39 @@
-# GDSC — Wearable fatigue ML (fill-in-the-blank)
+# GDSC — Wearable fatigue ML (week-by-week build)
 
-Eight in-room sessions building a **stress/fatigue classifier** from the **[Kaggle Sleep Health and Lifestyle dataset](https://www.kaggle.com/datasets/uom190346a/sleep-health-and-lifestyle-dataset)**, plus a **Streamlit** demo for showcase.
+Eight in-room sessions: mentees implement **`src/`** step by step until **`streamlit run app/streamlit_app.py`** matches the **mentor preview** (colorful gauge, presets, “Why this score?” explanations).
 
-**Students:** implement TODOs in **`src/`** — see [docs/STUDENT_GUIDE.md](docs/STUDENT_GUIDE.md).  
-**Mentor:** answer key in **`solutions/`** — [docs/MENTOR.md](docs/MENTOR.md).
+**Dataset:** [Kaggle — Sleep Health and Lifestyle](https://www.kaggle.com/datasets/uom190346a/sleep-health-and-lifestyle-dataset)
+
+| Role | Start here |
+|------|------------|
+| **Mentee** | [docs/BUILD_PATH.md](docs/BUILD_PATH.md) → Session 1 notebook |
+| **Mentor** | [docs/MENTOR.md](docs/MENTOR.md) · `PYTHONPATH=. streamlit run app/mentor_preview.py` |
 
 **Repo:** https://github.com/pranathigadhanki-alt/gdsc-wearable-fatigue-ml
-
-## Quick start
 
 ```bash
 git clone https://github.com/pranathigadhanki-alt/gdsc-wearable-fatigue-ml.git
 cd gdsc-wearable-fatigue-ml
 pip install -r requirements.txt
 python scripts/generate_demo_data.py
+python scripts/check_session.py   # progress toward full app
 ```
 
-1. [docs/KAGGLE_SETUP.md](docs/KAGGLE_SETUP.md) — download CSV to `data/kaggle/`
-2. [docs/CURRICULUM.md](docs/CURRICULUM.md) — session plan
-3. Open `notebooks/week01_kickoff.ipynb` in Colab
+## How the preview fits in
 
-## Project layout
+| Session | Mentee work | App state |
+|---------|-------------|-----------|
+| 1–6 | `src/` + notebooks | Progress screen in `streamlit_app.py` |
+| 7 | models + explain | **Full dashboard** (same as mentor preview) |
+| 8 | Slides + demo | Same app at showcase |
 
-| Path | Role |
-|------|------|
-| `src/` | **Your code** (fill in the blanks) |
-| `solutions/` | Mentor reference — don’t peek until showcase |
-| `notebooks/` | Session walkthroughs |
-| `app/streamlit_app.py` | Demo UI (Session 7+) |
-| `docs/STUDENT_GUIDE.md` | TODO map by session |
+Shared UI: `app/dashboard.py` · Checks: `app/progress.py` / `scripts/check_session.py`
 
-## Sessions at a glance
+## Layout
 
-| # | Topic | `src/` focus |
-|---|--------|----------------|
-| 1 | Kaggle + Colab | `load_kaggle_raw` |
-| 2 | EDA | notebook |
-| 3 | Features + labels | `features.py`, `load_feature_table` |
-| 4 | Metrics + splits | `metrics_utils.py`, `participant_groups` |
-| 5 | Logistic vs RF | `models.py` pipelines |
-| 6 | Tuning / imbalance | notebook + models |
-| 7 | joblib + Streamlit | `train_model`, `predict_fatigue`, app |
-| 8 | Showcase | Slides + ethics |
+- `src/` — fill-in-the-blank (your code)
+- `solutions/` — mentor reference
+- `weeks/` + `notebooks/` — one session each
+- `app/` — theme + dashboard + streamlit entrypoints
 
-## License
-
-MIT — [LICENSE](LICENSE). Follow [Kaggle dataset terms](https://www.kaggle.com/datasets/uom190346a/sleep-health-and-lifestyle-dataset) for the CSV.
+MIT [LICENSE](LICENSE) — cite Kaggle dataset on slides.

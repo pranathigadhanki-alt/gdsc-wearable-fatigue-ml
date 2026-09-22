@@ -21,10 +21,9 @@ This track is for a **Google Developer Student Clubs** build sprint: one shared 
 
 ## What “done” looks like (club outcome)
 
-- Public-ish GitHub repo with notebooks and `src/`
-- Trained model (stored on Drive; params/small artifacts in repo as appropriate)
-- Streamlit demo suitable for a GDSC demo day
-- Slides that cite PMData/WESAD and state non-medical disclaimer
+- Mentees complete **[BUILD_PATH.md](BUILD_PATH.md)** — `python scripts/check_session.py` shows “Dashboard ready”
+- **`streamlit run app/streamlit_app.py`** matches **`mentor_preview`** (same `app/dashboard.py`)
+- Slides cite Kaggle Sleep Health dataset + non-medical disclaimer
 
 ## Common pitfalls
 
