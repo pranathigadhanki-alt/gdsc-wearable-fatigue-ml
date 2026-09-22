@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.kaggle_schema import KAGGLE_FILENAME, LABEL_STRAIN
+from src.kaggle_schema import KAGGLE_FILENAME
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 KAGGLE_RAW = REPO_ROOT / "data" / "kaggle" / KAGGLE_FILENAME

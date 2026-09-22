@@ -35,7 +35,12 @@ def load_feature_table(use_demo: bool = True) -> pd.DataFrame:
 
 def load_person_baselines(use_demo: bool = True) -> pd.DataFrame:
     if use_demo and BASELINES_DEMO.exists():
-        return pd.read_csv(BASELINES_DEMO)
+        base = pd.read_csv(BASELINES_DEMO)
+        if COL_DISORDER not in base.columns:
+            df = load_feature_table(use_demo=True)
+            disorder = df.groupby(COL_PARTICIPANT)[COL_DISORDER].first().reset_index()
+            base = base.merge(disorder, on=COL_PARTICIPANT, how="left")
+        return base
     df = load_feature_table(use_demo=use_demo)
     base = compute_person_baselines(df)
     if COL_DISORDER in df.columns:

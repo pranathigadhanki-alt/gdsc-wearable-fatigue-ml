@@ -10,7 +10,10 @@ import streamlit as st
 
 from app.input_helpers import COMPARE_LABELS, ui_to_model_row
 from app.ui_theme import baseline_pills, hero, inject_theme, reason_card
-from src.kaggle_schema import WATCH_SIGNALS
+from src.kaggle_schema import COL_DISORDER, COL_PARTICIPANT, WATCH_SIGNALS
+
+# Bump when demo schema changes (invalidates Streamlit cache).
+_CACHE_VERSION = "recovery-disorder-v1"
 
 PRESETS = {
     "Typical night": "baseline",
@@ -35,15 +38,18 @@ def run_dashboard(
     inject_theme()
 
     @st.cache_resource
-    def get_assets():
+    def get_assets(_schema_version: str):
         df = load_feature_table(use_demo=True)
         baselines = load_person_baselines(use_demo=True)
+        if COL_DISORDER not in baselines.columns and COL_DISORDER in df.columns:
+            disorder = df.groupby(COL_PARTICIPANT)[COL_DISORDER].first().reset_index()
+            baselines = baselines.merge(disorder, on=COL_PARTICIPANT, how="left")
         pipe = train_model(use_demo=True)
         save_model(pipe)
         return df, baselines, pipe
 
-    df, baselines, pipe = get_assets()
-    baselines = baselines[baselines["sleep_disorder"].isin(["Insomnia", "Sleep Apnea"])]
+    df, baselines, pipe = get_assets(_CACHE_VERSION)
+    baselines = baselines[baselines[COL_DISORDER].isin(["Insomnia", "Sleep Apnea"])]
     people = baselines["participant_id"].tolist()
 
     with st.sidebar:
@@ -51,7 +57,7 @@ def run_dashboard(
         pid = st.selectbox(
             "Person",
             people,
-            format_func=lambda x: f"Person {x} ({baselines.loc[baselines.participant_id==x,'sleep_disorder'].iloc[0]})",
+            format_func=lambda x: f"Person {x} ({baselines.loc[baselines[COL_PARTICIPANT]==x, COL_DISORDER].iloc[0]})",
         )
         preset = st.selectbox("Tonight scenario", list(PRESETS.keys()))
         st.markdown("---")
@@ -60,7 +66,7 @@ def run_dashboard(
         st.metric("Better-tomorrow rate", f"{df['better_night_tomorrow'].mean():.0%}")
 
     b = baselines[baselines["participant_id"] == pid].iloc[0]
-    disorder = str(b["sleep_disorder"])
+    disorder = str(b[COL_DISORDER])
 
     hero("RecoveryScope", subtitle)
 

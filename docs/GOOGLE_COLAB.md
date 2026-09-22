@@ -1,8 +1,15 @@
 # Google Colab workflow
 
-## Open notebooks
+## Week 1 link (share in chat)
 
-Upload from `notebooks/` or clone the repo in the first cell of each session notebook.
+**Session 1 notebook:**  
+https://colab.research.google.com/github/pranathigadhanki-alt/gdsc-wearable-fatigue-ml/blob/main/notebooks/week01_kickoff.ipynb
+
+Path cheat sheet: **[COLAB_WEEK1.md](COLAB_WEEK1.md)**
+
+## Open other sessions
+
+Replace `week01_kickoff` with `week02_eda`, `week03_features`, etc. in the URL, or clone the repo in the first cell of each session notebook.
 
 ## Standard setup cell
 
