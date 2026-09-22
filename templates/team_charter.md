@@ -1,26 +1,24 @@
-# Team charter — StrainScope (Session 1)
+# RecoveryScope charter (Session 1)
 
-## One-line pitch
+## Pitch
 
-We estimate **next-day strain** from **watch-like signals** and **personal baselines** — without asking users how stressed they feel in the demo.
+For people with **insomnia or sleep apnea** (public data), we predict **better night tomorrow** from watch signals + personal baseline — and show what changes help.
 
 ## Label (training only)
 
-`strain_high` = 1 when: _________________________  
-(Default: Kaggle stress ≥ 7 OR sleep quality ≤ 5 — **not** shown in the app UI.)
+`better_night_tomorrow` = 1 when: _________________________  
+Default: next row has higher sleep quality OR ≥0.25h more sleep.
 
-## Success metric
+## Cohort
 
-Primary: _________________________ on held-out **people**  
-Secondary: What-if scenarios feel plausible to testers
+- [ ] Train/evaluate on Insomnia + Sleep Apnea rows only
 
-## What we never ask at demo time
+## Demo UI (never ask)
 
-- [ ] Stress level slider removed  
-- [ ] Sleep quality self-report removed  
-- [ ] Only: sleep hours, HR, steps, activity + person profile
+- [ ] No stress slider
+- [ ] No «how rested» slider
+- [ ] Yes: last night + tonight watch signals
 
-## GitHub / Drive
+## Ethics
 
-Repo branch policy: `feature/session-N-...`  
-Team Drive folder: _________________________
+Not a sleep study replacement. Users with symptoms should see a clinician.

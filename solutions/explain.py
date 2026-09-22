@@ -1,4 +1,4 @@
-"""Plain language: today vs *your* baseline — no survey questions, no ML jargon."""
+"""Recovery-focused copy — vs your baseline, disorder-aware."""
 
 from __future__ import annotations
 
@@ -18,61 +18,6 @@ class Reason:
     detail: str
 
 
-def _fmt_delta(name: str, delta: float, unit: str) -> Reason | None:
-    labels = {
-        "sleep_duration": ("Sleep duration", "hours"),
-        "heart_rate": ("Resting heart rate", "bpm"),
-        "daily_steps": ("Steps", ""),
-        "physical_activity_level": ("Active minutes", "min"),
-    }
-    title, u = labels.get(name, (name, unit))
-    if abs(delta) < 0.05 if name == "sleep_duration" else abs(delta) < 30:
-        return None
-    if delta < 0 and name == "sleep_duration":
-        return Reason(
-            "🌙",
-            "risk",
-            "Less sleep than your normal",
-            f"About **{abs(delta):.1f} {u}** below *your* usual — the model treats that like higher next-day strain.",
-        )
-    if delta > 0 and name == "sleep_duration":
-        return Reason(
-            "🌙",
-            "ok",
-            "More sleep than your normal",
-            f"**{delta:.1f} {u}** above *your* baseline — a recovery-friendly signal.",
-        )
-    if delta > 5 and name == "heart_rate":
-        return Reason(
-            "❤️",
-            "risk",
-            "Heart rate above your baseline",
-            f"**{delta:.0f} bpm** higher than your typical resting rate — often shows up before people feel «off».",
-        )
-    if delta < -3 and name == "heart_rate":
-        return Reason(
-            "❤️",
-            "ok",
-            "Calmer than your usual",
-            f"**{abs(delta):.0f} bpm** below your normal resting heart rate.",
-        )
-    if delta < -800 and name == "daily_steps":
-        return Reason(
-            "🚶",
-            "neutral",
-            "Much quieter than your norm",
-            f"**{abs(delta):,.0f} steps** below your typical day — rest or low energy; context matters.",
-        )
-    if delta > 1000 and name == "daily_steps":
-        return Reason(
-            "🚶",
-            "ok",
-            "More movement than your norm",
-            f"**{delta:,.0f} extra steps** vs your baseline.",
-        )
-    return None
-
-
 def explain_prediction(
     model_row: dict,
     baselines: pd.DataFrame,
@@ -83,42 +28,90 @@ def explain_prediction(
 ) -> tuple[list[Reason], str]:
     del pipe, label
     reasons: list[Reason] = []
-    for col in WATCH_SIGNALS:
-        d = model_row.get(f"{col}_delta", 0)
-        r = _fmt_delta(col, float(d), "")
-        if r:
-            reasons.append(r)
-
     b = baselines[baselines["participant_id"] == participant_id]
     if b.empty:
         b = baselines.iloc[[0]]
     b = b.iloc[0]
+    disorder = str(b.get("sleep_disorder", "Insomnia"))
 
-    reasons.insert(
-        0,
+    reasons.append(
         Reason(
-            "👤",
+            "🩺",
             "neutral",
-            "Compared to you — not everyone else",
-            f"Your normal: **{b['sleep_duration']:.1f}h sleep**, **{b['heart_rate']:.0f} bpm**, "
-            f"**{b['daily_steps']:,.0f} steps**. Today’s score is about deviation from *that*.",
-        ),
+            f"Profile: {disorder}",
+            "We train on public data from people with **insomnia** or **sleep apnea** — "
+            "this is education, not a diagnosis or sleep study.",
+        )
     )
+
+    sd = float(model_row.get("sleep_duration_delta", 0))
+    if sd <= -0.4:
+        reasons.append(
+            Reason(
+                "🌙",
+                "risk",
+                "Less sleep than your usual",
+                f"Tonight is about **{abs(sd):.1f} h** below *your* normal — recovery nights are harder to stack after short sleep.",
+            )
+        )
+    elif sd >= 0.4:
+        reasons.append(
+            Reason(
+                "🌙",
+                "ok",
+                "Extra sleep vs your baseline",
+                "More time in bed than your typical night — that often helps the **next** night go better.",
+            )
+        )
+
+    lag_sleep = float(model_row.get("lag1_sleep_duration", 0))
+    if lag_sleep < float(b["sleep_duration"]) - 0.5:
+        reasons.append(
+            Reason(
+                "📅",
+                "risk",
+                "Rough previous night",
+                f"Last night’s sleep was short (**{lag_sleep:.1f} h**). The model uses that history — not how you *feel* today.",
+            )
+        )
+
+    hr_d = float(model_row.get("heart_rate_delta", 0))
+    if hr_d >= 6:
+        reasons.append(
+            Reason(
+                "❤️",
+                "risk",
+                "Resting HR above your norm",
+                f"**{hr_d:.0f} bpm** above your baseline — common in apnea/insomnia flares in this dataset.",
+            )
+        )
+
+    steps_d = float(model_row.get("daily_steps_delta", 0))
+    if steps_d >= 1500:
+        reasons.append(
+            Reason(
+                "🚶",
+                "ok",
+                "More movement than usual",
+                "Higher activity vs *your* baseline sometimes aligns with better recovery nights in the data.",
+            )
+        )
 
     if proba >= 0.55:
         lead = (
-            f"**{proba:.0%}** estimated chance of **elevated next-day strain** from watch-like signals "
-            "— **without** asking how stressed or rested you feel."
+            f"About **{proba:.0%}** chance of a **better night tomorrow** "
+            "(more sleep or better-rest feeling in the data) given tonight’s watch-like signals."
         )
     else:
         lead = (
-            f"**{proba:.0%}** strain risk — today looks **closer to your own normal** in the data we learned from."
+            f"About **{proba:.0%}** chance of a clear recovery night tomorrow — "
+            "patterns look tougher from here; small habit shifts may still help (see What-if)."
         )
 
     risk = [r for r in reasons if r.tone == "risk"]
     if risk:
-        tail = " Main flags: **" + "**, **".join(r.title for r in risk[:2]) + "**."
+        tail = " Headwinds: **" + "**, **".join(r.title for r in risk[:2]) + "**."
     else:
-        tail = " No big departures from your baseline — that keeps strain risk lower."
+        tail = " Signals are relatively aligned with recovery in this profile."
 
     return reasons, lead + tail

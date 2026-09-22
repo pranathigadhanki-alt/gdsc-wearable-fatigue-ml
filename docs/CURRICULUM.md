@@ -17,7 +17,7 @@ Notebook plots; map columns for features. No `src/` required.
 
 ## Session 3 — Features + labels
 
-`build_features_from_kaggle`, `fatigue_label`, `load_feature_table`.
+`build_features_from_kaggle`, lags, `better_night_tomorrow_label`, disorder cohort, `load_feature_table`.
 
 ## Session 4 — Splits & metrics
 
@@ -33,7 +33,7 @@ GridSearchCV; optional SMOTE discussion.
 
 ## Session 7 — Full preview app
 
-`train_model`, `predict_fatigue`, `explain_prediction` → **`streamlit run app/streamlit_app.py`** (gauge, presets, explanations).
+`train_model`, `predict_recovery`, `build_model_row`, `explain_prediction`, `suggest_what_ifs` → **`streamlit run app/streamlit_app.py`** (recovery gauge, last night + tonight, what-if).
 
 ## Session 8 — Showcase
 

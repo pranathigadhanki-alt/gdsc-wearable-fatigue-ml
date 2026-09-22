@@ -17,6 +17,14 @@ def add_baseline_deltas(df: pd.DataFrame, baselines: pd.DataFrame) -> pd.DataFra
     raise NotImplementedError("Session 3: add_baseline_deltas")
 
 
-def watch_row_with_deltas(participant_id, today: dict, baselines: pd.DataFrame) -> dict:
-    # TODO Session 7: combine today values with baseline deltas for model input
-    raise NotImplementedError("Session 7: watch_row_with_deltas")
+def build_model_row(
+    participant_id,
+    today: dict,
+    last_night: dict,
+    baselines: pd.DataFrame,
+) -> dict:
+    # TODO Session 7: tonight + lag1 + deltas + disorder flags
+    raise NotImplementedError("Session 7: build_model_row")
+
+
+watch_row_with_deltas = build_model_row  # legacy name

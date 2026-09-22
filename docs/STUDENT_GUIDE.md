@@ -25,7 +25,7 @@ Until Session 7, `streamlit_app.py` shows a **progress checklist**.
 | 3 | `features.py`, `load_feature_table` |
 | 4 | `metrics_utils.py`, `participant_groups` |
 | 5 | `build_*_pipeline` |
-| 7 | `train_model`, `predict_fatigue`, `explain.py` |
+| 7 | `train_model`, `predict_recovery`, `baselines.build_model_row`, `explain.py`, `counterfactuals.py` |
 
 ## Data
 

@@ -1,4 +1,4 @@
-"""Predict strain from watch signals + personal baseline deltas only."""
+"""Predict probability of a better night tomorrow (disorder cohort)."""
 
 from __future__ import annotations
 
@@ -12,12 +12,13 @@ from sklearn.model_selection import GroupShuffleSplit
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
+from src.kaggle_schema import LABEL_RECOVERY
+
 from solutions.data_loader import load_feature_table, participant_groups
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-MODEL_PATH = REPO_ROOT / "models" / "strain_classifier.joblib"
+MODEL_PATH = REPO_ROOT / "models" / "recovery_classifier.joblib"
 
-# No stress / sleep-quality sliders at inference
 FEATURE_COLUMNS = [
     "sleep_duration",
     "heart_rate",
@@ -27,6 +28,12 @@ FEATURE_COLUMNS = [
     "heart_rate_delta",
     "daily_steps_delta",
     "physical_activity_level_delta",
+    "lag1_sleep_duration",
+    "lag1_heart_rate",
+    "lag1_daily_steps",
+    "lag1_physical_activity_level",
+    "disorder_insomnia",
+    "disorder_apnea",
 ]
 
 
@@ -53,7 +60,7 @@ def build_rf_pipeline() -> Pipeline:
 def train_model(use_demo: bool = True) -> Pipeline:
     df = load_feature_table(use_demo=use_demo)
     X = df[FEATURE_COLUMNS]
-    y = df["strain_high"]
+    y = df[LABEL_RECOVERY]
     groups = participant_groups(df)
     split = GroupShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
     train_idx, _ = next(split.split(X, y, groups=groups))
@@ -77,7 +84,7 @@ def load_model(path: Path | None = None) -> Pipeline:
     return joblib.load(path)
 
 
-def predict_strain(row: pd.Series | dict, pipe: Pipeline | None = None) -> tuple[int, float]:
+def predict_recovery(row: pd.Series | dict, pipe: Pipeline | None = None) -> tuple[int, float]:
     pipe = pipe or load_model()
     if isinstance(row, dict):
         row = pd.Series(row)
@@ -86,5 +93,4 @@ def predict_strain(row: pd.Series | dict, pipe: Pipeline | None = None) -> tuple
     return int(proba >= 0.5), proba
 
 
-# Back-compat alias for older notebook text
-predict_fatigue = predict_strain
+predict_strain = predict_recovery

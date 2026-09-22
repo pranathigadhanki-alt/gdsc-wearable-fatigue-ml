@@ -1,78 +1,36 @@
-# Build path — StrainScope
+# Build path — RecoveryScope
 
-**Judges narrative:** *We don’t ask how stressed you feel. We use watch-like signals to estimate next-day strain, compare you to your own baseline, and show what change (sleep, steps) moves the needle most.*
+**Label:** `better_night_tomorrow` — next night’s sleep quality rises OR sleep duration increases (training only; uses Kaggle columns students never slider in the app).
 
-Mentees implement **`src/`**; UI is already in **`app/dashboard.py`**. Mentor runs **`app/mentor_preview.py`**.
+**Cohort:** rows where `sleep_disorder` is **Insomnia** or **Sleep Apnea**.
 
-```bash
-python scripts/check_session.py
-```
+**Features:** tonight’s watch signals + **deltas vs personal baseline** + **lag1_** (last night) + disorder flags.
 
 ---
 
-## Session 1 — Kaggle + charter
+| Session | Implement | Outcome |
+|---------|-------------|---------|
+| 1 | `load_kaggle_raw` | CSV on Drive |
+| 2 | EDA by disorder | Plots in notebook |
+| 3 | `add_lag_features`, `better_night_tomorrow_label`, `prepare_training_frame`, baselines | `sample_demo.csv` |
+| 4 | Splits by person; rules vs ML slide | Metrics |
+| 5–6 | Pipelines + tuning | RF/logistic |
+| 7 | `predict_recovery`, explain, counterfactuals | Full **RecoveryScope** UI |
+| 8 | Slides + demo | Showcase |
 
-- Implement `load_kaggle_raw`
-- Charter: define **strain** and why we **hide** survey questions at inference
-- Notebook: `week01_kickoff.ipynb`
+## Session 3 detail
 
----
+1. Rename Kaggle columns; keep `sleep_disorder`.
+2. Sort by person; `lag1_sleep_duration`, etc.
+3. Label from **shift(-1)** on quality & sleep duration.
+4. Filter to insomnia/apnea; drop rows without lag/label.
 
-## Session 2 — EDA
+## Session 7
 
-- Explore sleep, HR, steps **per person**
-- Note: same person varies night to night → baselines matter
+`PYTHONPATH=. streamlit run app/streamlit_app.py`
 
----
+Mentor reference: `solutions/` only.
 
-## Session 3 — Baselines + labels (core idea)
+## Disclaimer (every showcase)
 
-**Files:** `src/baselines.py`, `src/features.py`, `src/data_loader.py`
-
-1. `compute_person_baselines` — median watch signals per `participant_id`
-2. `add_baseline_deltas` — `sleep_duration_delta`, etc.
-3. `strain_label` — training only: `(stress ≥ 7) | (quality ≤ 5)` from Kaggle
-4. `load_feature_table`, `load_person_baselines`
-
-**No stress/quality sliders in the final app.**
-
----
-
-## Session 4 — Splits & metrics
-
-- Split by **person** (GroupShuffleSplit)
-- Compare **rule baseline** (e.g. sleep delta only) vs upcoming ML on test set
-
----
-
-## Session 5–6 — Models & tuning
-
-- Features: `FEATURE_COLUMNS` in `src/models.py` (8 watch + delta columns)
-- Logistic vs Random Forest; optional GridSearch
-
----
-
-## Session 7 — Ship StrainScope
-
-- `train_model`, `predict_strain`
-- `src/explain.py` — today vs **your** baseline copy
-- `src/counterfactuals.py` — what-if scenarios
-- Run: `PYTHONPATH=. streamlit run app/streamlit_app.py`
-
----
-
-## Session 8 — Showcase
-
-- Live demo: pick person → bad day preset → **What moves the needle?** tab
-- Slide: rules vs ML on held-out people
-- Ethics: not medical advice; labels from self-report in training only
-
----
-
-## Slide bullets
-
-1. Problem: strain before you feel it — from the watch, not a survey  
-2. Personal baseline vs population averages  
-3. ML beats simple rules on held-out **people** (show metric)  
-4. What-if: +1h sleep → −X pp strain  
-5. Limitations & future (real Apple Health stream)
+Educational tool on public data — **not** diagnosis, **not** CPAP/prescription advice.

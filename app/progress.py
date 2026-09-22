@@ -1,4 +1,4 @@
-"""Session checks for StrainScope build path."""
+"""Session checks for RecoveryScope build path."""
 
 from __future__ import annotations
 
@@ -12,13 +12,13 @@ CHECKS: list[tuple[int, str, str, str]] = [
     (3, "load_feature_table", "src.data_loader", "load_feature_table"),
     (3, "load_person_baselines", "src.data_loader", "load_person_baselines"),
     (3, "build_features_from_kaggle", "src.features", "build_features_from_kaggle"),
-    (3, "strain_label", "src.features", "strain_label"),
+    (3, "better_night_tomorrow_label", "src.features", "better_night_tomorrow_label"),
     (4, "participant_groups", "src.data_loader", "participant_groups"),
     (4, "evaluate_classifier", "src.metrics_utils", "evaluate_classifier"),
     (5, "build_logistic_pipeline", "src.models", "build_logistic_pipeline"),
     (5, "build_rf_pipeline", "src.models", "build_rf_pipeline"),
     (7, "train_model", "src.models", "train_model"),
-    (7, "predict_strain", "src.models", "predict_strain"),
+    (7, "predict_recovery", "src.models", "predict_recovery"),
     (7, "explain_prediction", "src.explain", "explain_prediction"),
     (7, "suggest_what_ifs", "src.counterfactuals", "suggest_what_ifs"),
 ]
@@ -27,7 +27,7 @@ DASHBOARD_REQUIRES = {
     "load_feature_table",
     "load_person_baselines",
     "train_model",
-    "predict_strain",
+    "predict_recovery",
     "explain_prediction",
     "suggest_what_ifs",
 }
@@ -44,8 +44,8 @@ def _run_check(module_name: str, func_name: str) -> tuple[bool, str]:
                 pass
         elif func_name == "load_feature_table":
             df = fn(use_demo=True)
-            if "strain_high" not in df.columns:
-                return False, "missing strain_high"
+            if "better_night_tomorrow" not in df.columns:
+                return False, "missing better_night_tomorrow"
         elif func_name == "load_person_baselines":
             fn(use_demo=True)
         elif func_name == "build_features_from_kaggle":
@@ -67,11 +67,12 @@ def _run_check(module_name: str, func_name: str) -> tuple[bool, str]:
             out = fn(raw)
             if "sleep_duration_delta" not in out.columns:
                 return False, "missing deltas"
-        elif func_name == "strain_label":
+        elif func_name == "better_night_tomorrow_label":
             import pandas as pd
 
             df = pd.read_csv(ROOT / "data" / "sample_demo.csv")
-            if len(fn(df)) != len(df):
+            s = fn(df)
+            if len(s) != len(df):
                 return False, "bad length"
         elif func_name == "participant_groups":
             import pandas as pd
@@ -84,7 +85,7 @@ def _run_check(module_name: str, func_name: str) -> tuple[bool, str]:
             fn()
         elif func_name == "train_model":
             fn(use_demo=True)
-        elif func_name == "predict_strain":
+        elif func_name == "predict_recovery":
             from src.models import train_model, FEATURE_COLUMNS
             import pandas as pd
 
@@ -114,7 +115,8 @@ def _run_check(module_name: str, func_name: str) -> tuple[bool, str]:
                 "daily_steps": 5000,
                 "physical_activity_level": 40,
             }
-            fn(1, today, baselines, pipe, 0.5)
+            last = dict(today)
+            fn(1, today, last, baselines, pipe, 0.5)
         return True, "OK"
     except NotImplementedError as e:
         return False, str(e)

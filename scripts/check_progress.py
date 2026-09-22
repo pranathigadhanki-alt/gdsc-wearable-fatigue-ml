@@ -22,18 +22,20 @@ def main() -> None:
         return
 
     from solutions.data_loader import load_feature_table, load_person_baselines
-    from solutions.models import FEATURE_COLUMNS, predict_strain, train_model
+    from solutions.models import FEATURE_COLUMNS, predict_recovery, train_model
     from solutions.counterfactuals import suggest_what_ifs
-    from solutions.baselines import watch_row_with_deltas
+    from solutions.baselines import build_model_row
 
     df = load_feature_table(use_demo=True)
     baselines = load_person_baselines(use_demo=True)
     pipe = train_model(use_demo=True)
     pid = baselines["participant_id"].iloc[0]
-    today = {c: float(baselines.iloc[0][c]) for c in ["sleep_duration", "heart_rate", "daily_steps", "physical_activity_level"]}
-    row = watch_row_with_deltas(pid, today, baselines)
-    predict_strain(row, pipe)
-    suggest_what_ifs(pid, today, baselines, pipe, 0.5)
+    sig = ["sleep_duration", "heart_rate", "daily_steps", "physical_activity_level"]
+    today = {c: float(baselines.iloc[0][c]) for c in sig}
+    last = dict(today)
+    row = build_model_row(pid, today, last, baselines)
+    predict_recovery(row, pipe)
+    suggest_what_ifs(pid, today, last, baselines, pipe, 0.5)
     print("Mentor OK:", len(df), "rows,", len(FEATURE_COLUMNS), "features")
 
 

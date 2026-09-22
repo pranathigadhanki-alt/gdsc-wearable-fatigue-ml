@@ -1,4 +1,4 @@
-"""Sessions 5–7 — predict strain from watch signals + baseline deltas only."""
+"""Sessions 5–7 — predict better_night_tomorrow (disorder cohort)."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import pandas as pd
 from sklearn.pipeline import Pipeline
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-MODEL_PATH = REPO_ROOT / "models" / "strain_classifier.joblib"
+MODEL_PATH = REPO_ROOT / "models" / "recovery_classifier.joblib"
 
 FEATURE_COLUMNS = [
     "sleep_duration",
@@ -20,6 +20,12 @@ FEATURE_COLUMNS = [
     "heart_rate_delta",
     "daily_steps_delta",
     "physical_activity_level_delta",
+    "lag1_sleep_duration",
+    "lag1_heart_rate",
+    "lag1_daily_steps",
+    "lag1_physical_activity_level",
+    "disorder_insomnia",
+    "disorder_apnea",
 ]
 
 
@@ -50,8 +56,8 @@ def load_model(path: Path | None = None) -> Pipeline:
     return joblib.load(path)
 
 
-def predict_strain(row: pd.Series | dict, pipe: Pipeline | None = None) -> tuple[int, float]:
+def predict_recovery(row: pd.Series | dict, pipe: Pipeline | None = None) -> tuple[int, float]:
     raise NotImplementedError("Session 7")
 
 
-predict_fatigue = predict_strain  # notebook alias
+predict_strain = predict_recovery

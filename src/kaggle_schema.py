@@ -1,4 +1,4 @@
-"""Kaggle Sleep Health and Lifestyle — column names."""
+"""Kaggle Sleep Health — schema for RecoveryScope."""
 
 COL_PERSON_ID = "Person ID"
 COL_SLEEP_DURATION = "Sleep Duration"
@@ -7,6 +7,7 @@ COL_PHYSICAL_ACTIVITY = "Physical Activity Level"
 COL_STRESS_LEVEL = "Stress Level"
 COL_HEART_RATE = "Heart Rate"
 COL_DAILY_STEPS = "Daily Steps"
+COL_SLEEP_DISORDER = "Sleep Disorder"
 COL_AGE = "Age"
 COL_GENDER = "Gender"
 
@@ -18,11 +19,14 @@ COL_STRESS = "stress_level"
 COL_HR = "heart_rate"
 COL_STEPS = "daily_steps"
 COL_AGE_SNAKE = "age"
+COL_DISORDER = "sleep_disorder"
 
-# Hidden at inference — used only to build training labels
-LABEL_STRAIN = "strain_high"
+# Training label: next night improves (hidden quality/sleep in inference)
+LABEL_RECOVERY = "better_night_tomorrow"
+
+DISORDER_COHORT = ("Insomnia", "Sleep Apnea")
 
 KAGGLE_FILENAME = "Sleep_health_and_lifestyle_dataset.csv"
 
-# Watch-like signals the user can adjust in the app
 WATCH_SIGNALS = ("sleep_duration", "heart_rate", "daily_steps", "physical_activity_level")
+LAG_SIGNALS = ("lag1_sleep_duration", "lag1_heart_rate", "lag1_daily_steps", "lag1_physical_activity_level")
