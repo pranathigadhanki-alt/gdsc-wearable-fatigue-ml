@@ -1,6 +1,6 @@
 # RecoveryScope — GDSC sleep disorder recovery ML
 
-**Judges narrative:** We focus on people with **insomnia or sleep apnea** in public sleep data. From **watch-like signals**, **personal baselines**, and **last night’s history**, we estimate the chance of a **better night tomorrow**, then show which **sleep and activity changes** most improve that chance — **not** replacing a sleep study or doctor.
+ We focus on people with **insomnia or sleep apnea** in public sleep data. From **watch-like signals**, **personal baselines**, and **last night’s history**, we estimate the chance of a **better night tomorrow**, then show which **sleep and activity changes** most improve that chance — **not** replacing a sleep study or doctor.
 
 | | |
 |--|--|
